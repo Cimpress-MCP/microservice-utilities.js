@@ -40,8 +40,9 @@ class ServiceTokenProvider {
     }
 
     try {
-      let credentials = await this.currentTokenPromise;
-      if (!credentials || jwtManager.decode(credentials).exp < Date.now() / 1000) {
+      let jwtToken = await this.currentTokenPromise;
+      // lower the token expiry time by 10s so that the returned token will be not immediately expired
+      if (!jwtToken || jwtManager.decode(jwtToken).exp < (Date.now() / 1000) - 10) {
         this.currentTokenPromise = this.getTokenWithoutCache();
       }
       return this.currentTokenPromise;
