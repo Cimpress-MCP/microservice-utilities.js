@@ -4,7 +4,7 @@
  * Module dependencies
  */
 const commander = require('commander');
-const fs = require('fs');
+const fs = require('fs-extra');
 const packageMetadata = require('./package.json');
 const ci = require('ci-build-tools')(process.env.GIT_TAG_PUSHER);
 
@@ -17,11 +17,9 @@ commander.version(version);
 commander
   .command('build')
   .description('Setup require build files for npm package.')
-  .action(() => {
+  .action(async () => {
     packageMetadata.version = version;
-    fs.writeFile('./package.json', JSON.stringify(packageMetadata, null, 2), err => {
-      if (err) { throw err; }
-    });
+    await fs.writeJson('./package.json', packageMetadata, { spaces: 2 });
 
     console.log('Building package %s (%s)', packageMetadata.name, version);
     console.log('');
