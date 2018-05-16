@@ -1,7 +1,7 @@
-# Microservice Utils
+# Microservice Utilities
 
-[![Build Status](https://travis-ci.org/Cimpress-MCP/microservice-utils.js.svg?branch=master)](https://travis-ci.org/Cimpress-MCP/microservice-utils.js)
-[![npm version](https://badge.fury.io/js/microservice-utils.svg)](https://www.npmjs.com/package/microservice-utils)
+[![Build Status](https://travis-ci.org/Cimpress-MCP/microservice-utilities.js.svg?branch=master)](https://travis-ci.org/Cimpress-MCP/microservice-utilities.js)
+[![npm version](https://badge.fury.io/js/microservice-utilities.svg)](https://www.npmjs.com/package/microservice-utilities)
 
 Utilities supporting authorization, request logging and other often required parts of microservices.
 
@@ -10,7 +10,7 @@ Utilities supporting authorization, request logging and other often required par
 Install the library.
 
 ```bash
-npm install microservice-utils
+npm install microservice-utilities
 ```
 
 ### Request Logger
@@ -20,7 +20,7 @@ it also supports a custom logging function. By default it is also configured to 
 objects to JSON. That enables the error message and stack traces to appear in logs.
 
 ```javascript
-const { RequestLogger } = require('microservice-utils');
+const { RequestLogger } = require('microservice-utilities');
 const defaultConfiguration = { logFunction: console.log, extendErrorObjects: true };
 
 let requestLogger = new RequestLogger(defaultConfiguration);
@@ -38,7 +38,7 @@ npm install openapi-factory
 
 ```javascript
 const Api = require('openapi-factory');
-const { Authorizer, RequestLogger } = require('microservice-utils');
+const { Authorizer, RequestLogger } = require('microservice-utilities');
 const configuration = { jwkKeyListUrl: 'https://example.com/.well-known/jwks.json' };
 
 let requestLogger = new RequestLogger();
@@ -64,7 +64,7 @@ of the `clientId` specified in the configuration. It uses AWS KMS to decrypt the
 
 ```javascript
 const axios = require('axios');
-const { ServiceTokenProvider } = require('microservice-utils');
+const { ServiceTokenProvider } = require('microservice-utilities');
 const configuration = { 
   clientId: 'CLIENT_ID',
   encryptedClientSecret: 'BASE64_KMS_ENCRYPTED_CLIENT_SECRET',
@@ -86,7 +86,7 @@ accessToken = await serviceTokenProvider.getTokenWithoutCache();
 Http client wrapper providing convenient `get`, `post`, `put` methods with extended logging.
 
 ```javascript
-const { PlatformClient, RequestLogger } = require('microservice-utils');
+const { PlatformClient, RequestLogger } = require('microservice-utilities');
 
 let requestLogger = new RequestLogger();
 let platformClient = new PlatformClient(requestLogger.log);
