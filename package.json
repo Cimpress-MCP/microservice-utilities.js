@@ -1,5 +1,5 @@
 {
-  "name": "microservice-utils",
+  "name": "microservice-utilities",
   "version": "1.0.0",
   "description": "Utilities supporting authorization, request logging and other often reused parts of microservices.",
   "main": "src/index.js",
