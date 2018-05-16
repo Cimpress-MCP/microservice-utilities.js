@@ -6,15 +6,15 @@ const invalidToken = 'Invalid token';
 class PlatformClient {
   /**
    * Constructor
-   * @param logger function
+   * @param {Function} logFunction log function, defaults to console.log
    */
-  constructor(logger) {
-    if (!logger) { throw new Error('Missing required parameter: "logger"'); }
+  constructor(logFunction) {
+    this.logFunction = logFunction || console.log;
     let client = axios.create();
 
     client.interceptors.request.use(config => {
       config.requestId = uuid.v4();
-      logger({
+      this.logFunction({
         title: 'Platform Request',
         level: 'INFO',
         requestId: config.requestId,
@@ -27,7 +27,7 @@ class PlatformClient {
       }
       return config;
     }, error => {
-      logger({
+      this.logFunction({
         title: 'Platform Request Error',
         level: 'WARN',
         requestId: error && error.config && error.config.requestId,
@@ -39,14 +39,14 @@ class PlatformClient {
 
     client.interceptors.response.use(response => response, error => {
       if (error.message === invalidToken) {
-        logger({
+        this.logFunction({
           title: 'Platform call skipped due to a token error',
           level: 'INFO',
           requestId: error && error.config && error.config.requestId,
           exception: error
         });
       } else {
-        logger({
+        this.logFunction({
           title: 'Platform Response Error',
           level: 'INFO',
           requestId: error && error.config && error.config.requestId,

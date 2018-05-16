@@ -5,15 +5,12 @@ const jwkConverter = require('jwk-to-pem');
 class Authorizer {
   /**
    * Constructor
-   * @param {Object} logger function
-   * @param {Object} configuration configuration object
-   * @param {String} configuration.jwkKeyListUrl url used to retrieve the jwk public keys
+   * @param {Function} logFunction log function, defaults to console.log
+   * @param {Object}   configuration configuration object
+   * @param {String}   configuration.jwkKeyListUrl url used to retrieve the jwk public keys
    */
-  constructor(logger, configuration = {}) {
-    this.logger = logger;
-    if (!logger) {
-      throw new Error('Authorizer configuration error: missing required parameter "logger"');
-    }
+  constructor(logFunction, configuration = {}) {
+    this.logFunction = logFunction || console.log;
     if (!configuration.jwkKeyListUrl) {
       throw new Error('Authorizer configuration error: missing required property "jwkKeyListUrl"');
     }
@@ -31,7 +28,7 @@ class Authorizer {
       return jwkConverter(jwk);
     }
     this.publicKeysPromise = null;
-    this.logger({ level: 'ERROR', title: 'Unauthorized', details: 'PublicKey-Resolution-Failure', kid: kid || 'NO_KID_SPECIFIED', keys: result.data.keys });
+    this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'PublicKey-Resolution-Failure', kid: kid || 'NO_KID_SPECIFIED', keys: result.data.keys });
     throw new Error('Unauthorized');
   }
 
@@ -39,13 +36,13 @@ class Authorizer {
     let methodArn = request.methodArn;
     let token = this.getTokenFromAuthorizationHeader(request);
     if (!token) {
-      this.logger({ level: 'WARN', title: 'Unauthorized', details: 'No token specified', method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'No token specified', method: methodArn });
       throw new Error('Unauthorized');
     }
 
     let unverifiedToken = jwtManager.decode(token, { complete: true });
     if (!unverifiedToken) {
-      this.logger({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn });
       throw new Error('Unauthorized');
     }
 
@@ -55,7 +52,7 @@ class Authorizer {
     try {
       key = await this.getPublicKeyPromise(kid);
     } catch (error) {
-      this.logger({ level: 'ERROR', title: 'Unauthorized', details: 'Failed to get public key', error: error, method: methodArn });
+      this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'Failed to get public key', error: error, method: methodArn });
       throw new Error('Unauthorized');
     }
 
@@ -82,7 +79,7 @@ class Authorizer {
         }
       };
     } catch (exception) {
-      this.logger({ level: 'ERROR', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
+      this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
       throw new Error('Unauthorized');
     }
   }

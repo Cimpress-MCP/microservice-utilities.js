@@ -129,7 +129,7 @@ describe('RequestLogger', () => {
         let loggerMock = sandbox.mock(logger);
         loggerMock.expects('log').withExactArgs(expectedLogString);
 
-        let requestLogger = new RequestLogger({ loggerFunction: logger.log, extendErrorObjects: true });
+        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true });
         requestLogger.log(testCase.message);
 
         loggerMock.verify();

@@ -4,12 +4,12 @@ class RequestLogger {
   /**
    * Constructor
    * @param {Object}   configuration configuration object
-   * @param {Function} configuration.loggerFunction optional logger function, by default RequestLogger uses console.log
+   * @param {Function} configuration.logFunction optional log function, by default RequestLogger uses console.log
    * @param {Boolean}  configuration.extendErrorObjects extends Error object globally in order to provide proper JSON
    *                   representation of Error objects.
    */
-  constructor(configuration = {}) {
-    this.loggerFunction = configuration.loggerFunction || console.log;
+  constructor(configuration = { logFunction: console.log, extendErrorObjects: true }) {
+    this.logFunction = configuration.logFunction;
     if (configuration.extendErrorObjects) {
       require('error-object-polyfill');
     }
@@ -38,7 +38,7 @@ class RequestLogger {
       return innerPayload.replace(/(eyJ[a-zA-Z0-9_-]{5,}\.eyJ[a-zA-Z0-9_-]{5,})\.[a-zA-Z0-9_-]*/gi, (m, p1) => `${p1}.<sig>`);
     };
 
-    this.loggerFunction(truncateToken(stringify(payload, null, 2)));
+    this.logFunction(truncateToken(stringify(payload, null, 2)));
   }
 }
 
