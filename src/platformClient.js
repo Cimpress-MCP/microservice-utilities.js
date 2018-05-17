@@ -7,9 +7,11 @@ class PlatformClient {
   /**
    * Constructor
    * @param {Function} logFunction log function, defaults to console.log
+   * @param {Function} tokenResolverFunction optional token resolver function, if provided it will extend the request headers with Bearer token
    */
-  constructor(logFunction) {
+  constructor(logFunction, tokenResolverFunction = null) {
     this.logFunction = logFunction || console.log;
+    this.tokenResolverFunction = tokenResolverFunction;
     let client = axios.create();
 
     client.interceptors.request.use(config => {
@@ -59,22 +61,49 @@ class PlatformClient {
     this.client = client;
   }
 
-  get(url, headers, type = 'json') {
+  async createHeadersWithResolvedToken(headers = {}) {
+    if (this.tokenResolverFunction) {
+      let token = await this.tokenResolverFunction();
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Get from the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} headers request headers
+   * @param {String} type accepted response type
+   */
+  async get(url, headers, type = 'json') {
     return this.client.get(url, {
-      headers: headers,
+      headers: await this.createHeadersWithResolvedToken(headers),
       responseType: type
     });
   }
 
-  post(url, data, headers) {
+  /**
+   * Post data to the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} data request data
+   * @param {Object} headers request headers
+   */
+  async post(url, data, headers) {
     return this.client.post(url, data, {
-      headers: headers
+      headers: await this.createHeadersWithResolvedToken(headers)
     });
   }
 
-  put(url, data, headers) {
+  /**
+   * Put data to the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} data request data
+   * @param {Object} headers request headers
+   */
+  async put(url, data, headers) {
     return this.client.put(url, data, {
-      headers: headers
+      headers: await this.createHeadersWithResolvedToken(headers)
     });
   }
 }
