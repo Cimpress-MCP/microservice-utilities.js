@@ -42,7 +42,7 @@ const { Authorizer, RequestLogger } = require('microservice-utilities');
 const configuration = { jwkKeyListUrl: 'https://example.com/.well-known/jwks.json' };
 
 let requestLogger = new RequestLogger();
-let authorizer = new Authorizer(requestLogger.log, configuration);
+let authorizer = new Authorizer(msg => requestLogger.log(msg), configuration);
 let api = new Api();
 
 api.setAuthorizer(async request => {
@@ -91,7 +91,7 @@ const { PlatformClient, RequestLogger } = require('microservice-utilities');
 
 let requestLogger = new RequestLogger();
 let tokenResolver = () => "exampleAccessToken";
-let platformClient = new PlatformClient(requestLogger.log, tokenResolver);
+let platformClient = new PlatformClient(msg => requestLogger.log(msg), tokenResolver);
 
 let headers = {};
 let dataObject = { exampleProperty: 'exampleValue' };
