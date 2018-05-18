@@ -83,15 +83,17 @@ accessToken = await serviceTokenProvider.getTokenWithoutCache();
 ```
 
 ### Platform Client
-Http client wrapper providing convenient `get`, `post`, `put` methods with extended logging.
+Http client wrapper providing convenient `get`, `post`, `put` methods with extended logging. It supports custom Bearer
+token resolvers and uses them to set the Authorization header properly.
 
 ```javascript
 const { PlatformClient, RequestLogger } = require('microservice-utilities');
 
 let requestLogger = new RequestLogger();
-let platformClient = new PlatformClient(requestLogger.log);
+let tokenResolver = () => "exampleAccessToken";
+let platformClient = new PlatformClient(requestLogger.log, tokenResolver);
 
-let headers = { Authorization: `Bearer ${accessToken}`};
+let headers = {};
 let dataObject = { exampleProperty: 'exampleValue' };
 
 let getResponse = await platformClient.get('VALID_URL', headers);
