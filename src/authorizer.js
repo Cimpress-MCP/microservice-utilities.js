@@ -79,7 +79,7 @@ class Authorizer {
         }
       };
     } catch (exception) {
-      this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
       throw new Error('Unauthorized');
     }
   }
