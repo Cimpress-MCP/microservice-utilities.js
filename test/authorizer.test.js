@@ -119,8 +119,10 @@ describe('authorizer.js', function() {
     ];
     testCases.forEach(testCase => {
       it(testCase.name, function() {
-        let logger = { log() {} };
+        let logger = { log() { } };
         let loggerMock = sandbox.mock(logger);
+        let requestLog = { level: 'INFO', title: 'Authorizer.getPolicy()', data: testCase.request };
+        loggerMock.expects('log').withExactArgs(requestLog).once();
         if (testCase.errorLog) {
           loggerMock.expects('log').withExactArgs(testCase.errorLog).once();
         }
