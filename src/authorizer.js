@@ -33,6 +33,7 @@ class Authorizer {
   }
 
   async getPolicy(request) {
+    this.logFunction({ level: 'INFO', title: 'Authorizer.getPolicy()', data: request });
     let methodArn = request.methodArn;
     let token = this.getTokenFromAuthorizationHeader(request);
     if (!token) {
