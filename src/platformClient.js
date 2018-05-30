@@ -75,6 +75,7 @@ class PlatformClient {
    * @param {String} url to send the request to
    * @param {Object} headers request headers
    * @param {String} type accepted response type
+   * @return {Promise<Object>}
    */
   async get(url, headers, type = 'json') {
     return this.client.get(url, {
@@ -88,6 +89,7 @@ class PlatformClient {
    * @param {String} url to send the request to
    * @param {Object} data request data
    * @param {Object} headers request headers
+   * @return {Promise<Object>}
    */
   async post(url, data, headers) {
     return this.client.post(url, data, {
@@ -100,9 +102,35 @@ class PlatformClient {
    * @param {String} url to send the request to
    * @param {Object} data request data
    * @param {Object} headers request headers
+   * @return {Promise<Object>}
    */
   async put(url, data, headers) {
     return this.client.put(url, data, {
+      headers: await this.createHeadersWithResolvedToken(headers)
+    });
+  }
+
+  /**
+   * Patch data on the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} data request data
+   * @param {Object} headers request headers
+   * @return {Promise<Object>}
+   */
+  async patch(url, data, headers) {
+    return this.client.patch(url, data, {
+      headers: await this.createHeadersWithResolvedToken(headers)
+    });
+  }
+
+  /**
+   * Delete the resource on the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} headers request headers
+   * @return {Promise<Object>}
+   */
+  async delete(url, headers) {
+    return this.client.delete(url, {
       headers: await this.createHeadersWithResolvedToken(headers)
     });
   }
