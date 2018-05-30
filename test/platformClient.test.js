@@ -91,4 +91,54 @@ describe('PlatformClient', () => {
       httpClientMock.verify();
     });
   });
+
+  describe('patch()', () => {
+    it('injects the resolved token into Authorization header', async () => {
+      const testUrl = 'unit-test-url';
+      const testData = 'unit-test-data';
+      const testToken = 'unit-test-token';
+      const testHeaders = { UnitTestHeader: 'unit-test-header-value' };
+      const expectedHeaders = { UnitTestHeader: 'unit-test-header-value', Authorization: `Bearer ${testToken}` };
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let httpClient = { patch() {} };
+      let httpClientMock = sandbox.mock(httpClient);
+      httpClientMock.expects('patch').withExactArgs(testUrl, testData, { headers: expectedHeaders }).resolves();
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = httpClient;
+
+      await platformClient.patch(testUrl, testData, testHeaders);
+
+      expect(tokenResolverFunctionMock.calledOnce).to.equal(true);
+      httpClientMock.verify();
+    });
+  });
+
+  describe('delete()', () => {
+    it('injects the resolved token into Authorization header', async () => {
+      const testUrl = 'unit-test-url';
+      const testData = 'unit-test-data';
+      const testToken = 'unit-test-token';
+      const testHeaders = { UnitTestHeader: 'unit-test-header-value' };
+      const expectedHeaders = { UnitTestHeader: 'unit-test-header-value', Authorization: `Bearer ${testToken}` };
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let httpClient = { delete() {} };
+      let httpClientMock = sandbox.mock(httpClient);
+      httpClientMock.expects('delete').withExactArgs(testUrl, testData, { headers: expectedHeaders }).resolves();
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = httpClient;
+
+      await platformClient.delete(testUrl, testData, testHeaders);
+
+      expect(tokenResolverFunctionMock.calledOnce).to.equal(true);
+      httpClientMock.verify();
+    });
+  });
 });
