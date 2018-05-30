@@ -126,12 +126,11 @@ class PlatformClient {
   /**
    * Delete the resource on the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
    * @param {String} url to send the request to
-   * @param {Object} data request data
    * @param {Object} headers request headers
    * @return {Promise<Object>}
    */
-  async delete(url, data, headers) {
-    return this.client.delete(url, data, {
+  async delete(url, headers) {
+    return this.client.delete(url, {
       headers: await this.createHeadersWithResolvedToken(headers)
     });
   }
