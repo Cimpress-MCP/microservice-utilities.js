@@ -63,8 +63,12 @@ class PlatformClient {
 
   async createHeadersWithResolvedToken(headers = {}) {
     if (this.tokenResolverFunction) {
-      let token = await this.tokenResolverFunction();
-      headers.Authorization = `Bearer ${token}`;
+      if (headers.Authorization) {
+        throw new Error('Authorization header already specified, please create a new PlatformClient with a different (or without a) tokenResolver');
+      } else {
+        let token = await this.tokenResolverFunction();
+        headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     return headers;
@@ -131,6 +135,30 @@ class PlatformClient {
    */
   async delete(url, headers) {
     return this.client.delete(url, {
+      headers: await this.createHeadersWithResolvedToken(headers)
+    });
+  }
+
+  /**
+   * Makes a head call to the provided url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} headers request headers
+   * @return {Promise<Object>}
+   */
+  async head(url, headers) {
+    return this.client.head(url, {
+      headers: await this.createHeadersWithResolvedToken(headers)
+    });
+  }
+
+  /**
+   * Makes an options call to the provided url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {Object} headers request headers
+   * @return {Promise<Object>}
+   */
+  async options(url, headers) {
+    return this.client.options(url, {
       headers: await this.createHeadersWithResolvedToken(headers)
     });
   }

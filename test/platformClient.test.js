@@ -140,4 +140,104 @@ describe('PlatformClient', () => {
       httpClientMock.verify();
     });
   });
+
+  describe('head()', () => {
+    it('injects the resolved token into Authorization header', async () => {
+      const testUrl = 'unit-test-url';
+      const testToken = 'unit-test-token';
+      const testHeaders = { UnitTestHeader: 'unit-test-header-value' };
+      const expectedHeaders = { UnitTestHeader: 'unit-test-header-value', Authorization: `Bearer ${testToken}` };
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let httpClient = { head() {} };
+      let httpClientMock = sandbox.mock(httpClient);
+      httpClientMock.expects('head').withExactArgs(testUrl, { headers: expectedHeaders }).resolves();
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = httpClient;
+
+      await platformClient.head(testUrl, testHeaders);
+
+      expect(tokenResolverFunctionMock.calledOnce).to.equal(true);
+      httpClientMock.verify();
+    });
+  });
+
+  describe('options()', () => {
+    it('injects the resolved token into Authorization header', async () => {
+      const testUrl = 'unit-test-url';
+      const testToken = 'unit-test-token';
+      const testHeaders = { UnitTestHeader: 'unit-test-header-value' };
+      const expectedHeaders = { UnitTestHeader: 'unit-test-header-value', Authorization: `Bearer ${testToken}` };
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let httpClient = { options() {} };
+      let httpClientMock = sandbox.mock(httpClient);
+      httpClientMock.expects('options').withExactArgs(testUrl, { headers: expectedHeaders }).resolves();
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = httpClient;
+
+      await platformClient.options(testUrl, testHeaders);
+
+      expect(tokenResolverFunctionMock.calledOnce).to.equal(true);
+      httpClientMock.verify();
+    });
+  });
+
+  describe('createHeadersWithResolvedToken()', () => {
+    it('adds the platform token', async () => {
+      const testToken = 'unit-test-token';
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = {};
+
+      let headers = {};
+
+      let generatedHeader = await platformClient.createHeadersWithResolvedToken(headers);
+
+      expect(generatedHeader.Authorization).to.equal(`Bearer ${testToken}`);
+    });
+
+    it('errors when there is an auth header set', async () => {
+      const testToken = 'unit-test-token';
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = {};
+
+      let headers = {
+        Authorization: 'Bearer abc'
+      };
+      
+      let error = null;
+      try {
+        await platformClient.createHeadersWithResolvedToken(headers);
+      } catch (e) {
+        error = e;
+      }
+      // fails with null exception if no error is thrown
+      expect(error.message).to.equal('Authorization header already specified, please create a new PlatformClient with a different (or without a) tokenResolver');
+    });
+
+    it('doesn\'t do anything if the tokenResolver is not present', async () => {
+      let platformClient = new PlatformClient(null, null);
+      platformClient.client = {};
+
+      let headers = {};
+
+      let generatedHeader = await platformClient.createHeadersWithResolvedToken(headers);
+
+      expect(generatedHeader).to.equal(headers);
+    });
+  });
 });
