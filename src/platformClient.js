@@ -29,14 +29,19 @@ class PlatformClient {
       }
       return config;
     }, error => {
+      let newError = error && error.response && {
+        data: error.response.data,
+        status: error.response.status,
+        headers: error.response.headers
+      } || error.request || error.message || error;
       this.logFunction({
         title: 'Platform Request Error',
         level: 'WARN',
         requestId: error && error.config && error.config.requestId,
-        exception: error
+        exception: newError
       });
 
-      throw error;
+      throw newError;
     });
 
     client.interceptors.response.use(response => response, error => {
