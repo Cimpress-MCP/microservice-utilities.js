@@ -63,7 +63,9 @@ class PlatformClient {
 
   async createHeadersWithResolvedToken(headers = {}) {
     if (this.tokenResolverFunction) {
-      if (!headers.Authorization) {
+      if (headers.Authorization) {
+        throw new Error('Authorization header already specified, please create a new PlatformClient with a different (or without a) tokenResolver');
+      } else {
         let token = await this.tokenResolverFunction();
         headers.Authorization = `Bearer ${token}`;
       }

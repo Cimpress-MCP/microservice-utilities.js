@@ -206,7 +206,7 @@ describe('PlatformClient', () => {
       expect(generatedHeader.Authorization).to.equal(`Bearer ${testToken}`);
     });
 
-    it('does not replace the auth header when one is already in place', async () => {
+    it('errors when there is an auth header set', async () => {
       const testToken = 'unit-test-token';
 
       let tokenResolverFunctionMock = sandbox.stub();
@@ -218,10 +218,15 @@ describe('PlatformClient', () => {
       let headers = {
         Authorization: 'Bearer abc'
       };
-
-      let generatedHeader = await platformClient.createHeadersWithResolvedToken(headers);
-
-      expect(generatedHeader).to.equal(headers);
+      
+      let error = null;
+      try {
+        await platformClient.createHeadersWithResolvedToken(headers);
+      } catch (e) {
+        error = e;
+      }
+      // fails with null exception if no error is thrown
+      expect(error.message).to.equal('Authorization header already specified, please create a new PlatformClient with a different (or without a) tokenResolver');
     });
 
     it('doesn\'t do anything if the tokenResolver is not present', async () => {
