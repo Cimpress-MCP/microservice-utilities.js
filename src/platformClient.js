@@ -33,11 +33,11 @@ class PlatformClient {
         data: error.response.data,
         status: error.response.status,
         headers: error.response.headers
-      } || error.request || error.message || error;
+      } || error.message && { message: error.message, code: error.code, stack: error.stack } || error;
       this.logFunction({
         title: 'Platform Request Error',
         level: 'WARN',
-        requestId: error && error.config && error.config.requestId,
+        requestId: error && error.config && error.config.requestId || error.request && error.request.config && error.request.config.requestId,
         exception: newError
       });
 
@@ -45,22 +45,18 @@ class PlatformClient {
     });
 
     client.interceptors.response.use(response => response, error => {
+      let newError = error && error.response && {
+        data: error.response.data,
+        status: error.response.status,
+        headers: error.response.headers
+      } || error.message && { message: error.message, code: error.code, stack: error.stack } || error;
+      let requestId = error && error.config && error.config.requestId || error.request && error.request.config && error.request.config.requestId;
       if (error.message === invalidToken) {
-        this.logFunction({
-          title: 'Platform call skipped due to a token error',
-          level: 'INFO',
-          requestId: error && error.config && error.config.requestId,
-          exception: error
-        });
+        this.logFunction({ title: 'Platform call skipped due to a token error', level: 'INFO', requestId: requestId, exception: newError });
       } else {
-        this.logFunction({
-          title: 'Platform Response Error',
-          level: 'INFO',
-          requestId: error && error.config && error.config.requestId,
-          exception: error
-        });
+        this.logFunction({ title: 'Platform Response Error', level: 'INFO', requestId: requestId, exception: newError });
       }
-      throw error;
+      throw newError;
     });
 
     this.client = client;
