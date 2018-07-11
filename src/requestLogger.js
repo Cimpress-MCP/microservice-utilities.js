@@ -11,7 +11,7 @@ class RequestLogger {
    */
   constructor(configuration = { logFunction: console.log, extendErrorObjects: true, jsonSpace: 2 }) {
     this.logFunction = configuration.logFunction;
-    this.jsonSpace = configuration.jsonSpace;
+    this.jsonSpace = configuration.jsonSpace === null || configuration.jsonSpace === undefined ? 2 : configuration.jsonSpace;
     if (configuration.extendErrorObjects) {
       require('error-object-polyfill');
     }

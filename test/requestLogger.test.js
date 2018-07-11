@@ -28,7 +28,7 @@ describe('RequestLogger', () => {
         }
       },
       {
-        name: 'uses specified spaces when overridden',
+        name: 'uses specified spaces when overridden with 0',
         jsonSpace: 0,
         message: {
           title: 'My title'
