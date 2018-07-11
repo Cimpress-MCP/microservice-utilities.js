@@ -28,6 +28,16 @@ describe('RequestLogger', () => {
         }
       },
       {
+        name: 'uses specified spaces when overridden',
+        jsonSpace: 0,
+        message: {
+          title: 'My title'
+        },
+        expectedMessage: {
+          title: 'My title'
+        }
+      },
+      {
         name: 'logs an exception',
         message: {
           title: 'Exception',
@@ -122,14 +132,15 @@ describe('RequestLogger', () => {
     ];
     testCases.map(testCase => {
       it(testCase.name, () => {
+        let jsonSpace = testCase.jsonSpace === undefined ? 2 : testCase.jsonSpace;
         let logObj = { message: testCase.expectedMessage };
-        let expectedLogString = JSON.stringify(logObj, null, 2);
+        let expectedLogString = JSON.stringify(logObj, null, jsonSpace);
 
         let logger = { log() { } };
         let loggerMock = sandbox.mock(logger);
         loggerMock.expects('log').withExactArgs(expectedLogString);
 
-        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true });
+        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true, jsonSpace });
         requestLogger.log(testCase.message);
 
         loggerMock.verify();
