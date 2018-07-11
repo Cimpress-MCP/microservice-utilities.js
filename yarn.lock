@@ -351,9 +351,9 @@ error-ex@^1.2.0:
   dependencies:
     is-arrayish "^0.2.1"
 
-error-object-polyfill@^1.0.11:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/error-object-polyfill/-/error-object-polyfill-1.0.11.tgz#273ac30ef751c11bfca5f997efbb42695194d9a2"
+error-object-polyfill@^1.0.13:
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/error-object-polyfill/-/error-object-polyfill-1.0.13.tgz#e1f42cfccd3ed023ac6151ea73925bc6fc6a301f"
 
 escape-string-regexp@1.0.5, escape-string-regexp@^1.0.2, escape-string-regexp@^1.0.5:
   version "1.0.5"
