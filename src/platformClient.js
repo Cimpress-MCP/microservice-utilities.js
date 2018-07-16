@@ -1,6 +1,5 @@
 const axios = require('axios');
 const uuid = require('uuid');
-const _ = require('lodash');
 
 const invalidToken = 'Invalid token';
 
@@ -9,13 +8,13 @@ class PlatformClient {
    * Constructor
    * @param {Function} logFunction log function, defaults to console.log
    * @param {Function} tokenResolverFunction optional token resolver function, if provided it will extend the request headers with Bearer token
-   * @param {Object} axiosDefaults optional defaults object that will be merged with axios defaults
+   * @param {Object} options optional object
+   * @param {Object} options.client axios http client
    */
-  constructor(logFunction, tokenResolverFunction = null, axiosDefaults = {}) {
+  constructor(logFunction, tokenResolverFunction = null, options = null) {
     this.logFunction = logFunction || console.log;
     this.tokenResolverFunction = tokenResolverFunction;
-    let client = axios.create();
-    _.merge(client.defaults, axiosDefaults);
+    let client = options && options.client || axios.create();
 
     client.interceptors.request.use(config => {
       config.requestId = uuid.v4();

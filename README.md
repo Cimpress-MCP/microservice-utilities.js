@@ -101,10 +101,12 @@ let postResponse = await platformClient.post('VALID_URL', dataObject, headers);
 let putResponse = await platformClient.put('VALID_URL', dataObject, headers);
 ```
 
-If you wish to override [Http client defaults](https://github.com/axios/axios#config-defaults), provide a third parameter when creating the `PlatformClient`. Bear in mind that only provided keys will be overriden, the rest will be untouched.
+If you wish to override [Http client defaults](https://github.com/axios/axios#config-defaults) and/or add your [own interceptors](https://github.com/axios/axios#interceptors), provide an options object containing an [axios client](https://github.com/axios/axios) as the third parameter when creating `PlatformClient`.
 
 ```javascript
-new PlatformClient(msg => requestLogger.log(msg), tokenResolver, { timeout: 3000 });
+const axios = require('axios');
+let axiosClient = axios.create({ timeout: 3000 });
+new PlatformClient(msg => requestLogger.log(msg), tokenResolver, { client: axiosClient });
 ```
 
 # Contribution
