@@ -8,11 +8,13 @@ class PlatformClient {
    * Constructor
    * @param {Function} logFunction log function, defaults to console.log
    * @param {Function} tokenResolverFunction optional token resolver function, if provided it will extend the request headers with Bearer token
+   * @param {Object} options optional object
+   * @param {Object} options.client axios http client
    */
-  constructor(logFunction, tokenResolverFunction = null) {
+  constructor(logFunction, tokenResolverFunction = null, options = null) {
     this.logFunction = logFunction || console.log;
     this.tokenResolverFunction = tokenResolverFunction;
-    let client = axios.create();
+    let client = options && options.client || axios.create();
 
     client.interceptors.request.use(config => {
       config.requestId = uuid.v4();

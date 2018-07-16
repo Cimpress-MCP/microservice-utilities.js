@@ -15,7 +15,7 @@ npm install microservice-utilities
 
 ### Request Logger
 Logger which takes care of truncating Bearer tokens and safe JSON stringification. While it logs to console by default,
-it also supports a custom logging function. By default it is also configured to extend the `Error` object using 
+it also supports a custom logging function. By default it is also configured to extend the `Error` object using
 [error-object-polyfill.js](https://github.com/wparad/error-object-polyfill.js), which enables stringification of `Error`
 objects to JSON. That enables the error message and stack traces to appear in logs.
 
@@ -25,7 +25,7 @@ const defaultConfiguration = { logFunction: console.log, extendErrorObjects: tru
 
 let requestLogger = new RequestLogger(defaultConfiguration);
 requestLogger.log({ title: 'Message title', level: 'WARN', error: 'Error'});
-``` 
+```
 
 ### Authorizer
 Authorizer to be used with AWS API Gateway. It also adds the caller's JWT to the API Gateway authorizer request context.
@@ -49,10 +49,10 @@ api.setAuthorizer(async request => {
   return await authorizer.getPolicy(request);
 });
 
-api.get('/v1/item', async request => {  
+api.get('/v1/item', async request => {
   // JWT added by authorizer
   let jwt = request.requestContext.authorizer.jwt;
-  
+
   // JWT included in the request will be automatically truncated by the RequestLogger
   requestLogger.log({ title: 'GET /v1/item', level: 'INFO', request: request });
 });
@@ -65,11 +65,11 @@ of the `clientId` specified in the configuration. It uses AWS KMS to decrypt the
 ```javascript
 const axios = require('axios');
 const { ServiceTokenProvider } = require('microservice-utilities');
-const configuration = { 
+const configuration = {
   clientId: 'CLIENT_ID',
   encryptedClientSecret: 'BASE64_KMS_ENCRYPTED_CLIENT_SECRET',
-  audience: 'https://example.com/', 
-  tokenEndpoint: 'https://example.com/oauth/token' 
+  audience: 'https://example.com/',
+  tokenEndpoint: 'https://example.com/oauth/token'
 };
 
 let kmsClient = new aws.KMS({ region: 'eu-west-1' });
@@ -99,7 +99,14 @@ let dataObject = { exampleProperty: 'exampleValue' };
 let getResponse = await platformClient.get('VALID_URL', headers);
 let postResponse = await platformClient.post('VALID_URL', dataObject, headers);
 let putResponse = await platformClient.put('VALID_URL', dataObject, headers);
+```
 
+If you wish to override [Http client defaults](https://github.com/axios/axios#config-defaults) and/or add your [own interceptors](https://github.com/axios/axios#interceptors), provide an options object containing an [axios client](https://github.com/axios/axios) as the third parameter when creating `PlatformClient`.
+
+```javascript
+const axios = require('axios');
+let axiosClient = axios.create({ timeout: 3000 });
+new PlatformClient(msg => requestLogger.log(msg), tokenResolver, { client: axiosClient });
 ```
 
 # Contribution
