@@ -5,6 +5,7 @@ const { describe, it, beforeEach, afterEach } = require('mocha');
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const PlatformClient = require('../src/platformClient');
+const axios = require('axios');
 
 describe('PlatformClient', () => {
   let sandbox;
@@ -218,7 +219,7 @@ describe('PlatformClient', () => {
       let headers = {
         Authorization: 'Bearer abc'
       };
-      
+
       let error = null;
       try {
         await platformClient.createHeadersWithResolvedToken(headers);
@@ -238,6 +239,38 @@ describe('PlatformClient', () => {
       let generatedHeader = await platformClient.createHeadersWithResolvedToken(headers);
 
       expect(generatedHeader).to.equal(headers);
+    });
+  });
+
+  describe('axios client with custom defaults', () => {
+    let testCases = [
+      {
+        name: 'no defaults provided',
+        options: undefined,
+        defaults: undefined
+      },
+      {
+        name: 'changing default timeout',
+        options: { client: axios.create({ timeout: 3000 }) },
+        defaults: { timeout: 3000 }
+      }
+    ];
+
+    testCases.forEach(test => {
+      it(test.name, () => {
+        let platformClientWithoutDefaultsChanged = new PlatformClient(null, null, null);
+        let platformClientWithDefaultsChanged = new PlatformClient(null, null, test.options);
+
+        if (test.defaults) {
+          Object.keys(test.defaults).forEach(key => {
+            expect(platformClientWithDefaultsChanged.client.defaults[key]).to.deep.equal(test.defaults[key]);
+            delete platformClientWithDefaultsChanged.client.defaults[key];
+            delete platformClientWithoutDefaultsChanged.client.defaults[key];
+          });
+        }
+
+        expect(platformClientWithoutDefaultsChanged.client.defaults).to.deep.equal(platformClientWithDefaultsChanged.client.defaults);
+      });
     });
   });
 });
