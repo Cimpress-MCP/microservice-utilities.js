@@ -66,6 +66,18 @@ describe('authorizer.js', function() {
         expectedResult: null
       },
       {
+        name: 'no kid specified',
+        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
+        errorLog: { level: errorlevel, title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token },
+        token,
+        unverifiedToken: { header: { kid: null } },
+        publicKeyError,
+        publicKeyId,
+        publicKey: 'unit-test-public-key',
+        expectedErrorResult: 'Unauthorized',
+        expectedResult: null
+      },
+      {
         name: 'fails to get public key',
         request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
         errorLog: { level: errorlevel, title: 'Unauthorized', details: 'Failed to get public key', method: methodArn, error: publicKeyError },
