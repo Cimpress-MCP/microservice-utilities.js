@@ -50,7 +50,7 @@ class Authorizer {
     let kid = unverifiedToken && unverifiedToken.header && unverifiedToken.header.kid;
 
     if (!kid) {
-      this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token });
       throw new Error('Unauthorized');
     }
 

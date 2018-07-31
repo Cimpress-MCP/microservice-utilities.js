@@ -68,7 +68,7 @@ describe('authorizer.js', function() {
       {
         name: 'no kid specified',
         request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
-        errorLog: { level: errorlevel, title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token },
+        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token },
         token,
         unverifiedToken: { header: { kid: null } },
         publicKeyError,
