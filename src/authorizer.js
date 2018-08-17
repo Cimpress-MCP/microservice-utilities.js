@@ -8,6 +8,7 @@ class Authorizer {
    * @param {Function} logFunction log function, defaults to console.log
    * @param {Object}   configuration configuration object
    * @param {String}   configuration.jwkKeyListUrl url used to retrieve the jwk public keys
+   * @param {String}   configuration.authorizerContextResolver function to populate the authorizer context, by default it will only contain the JWT. function(identity, token) {}
    */
   constructor(logFunction, configuration = {}) {
     this.logFunction = logFunction || console.log;
@@ -64,6 +65,7 @@ class Authorizer {
 
     try {
       let identity = await jwtManager.verify(token, key, { algorithms: ['RS256'] });
+      let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
       return {
         principalId: identity.sub,
         policyDocument: {
@@ -80,9 +82,7 @@ class Authorizer {
             }
           ]
         },
-        context: {
-          jwt: token
-        }
+        context: resolver(identity, token)
       };
     } catch (exception) {
       this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });

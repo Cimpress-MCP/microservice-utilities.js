@@ -21,6 +21,7 @@ describe('authorizer.js', function() {
     let testConfiguration = { jwkKeyListUrl: 'unit-test-url' };
     let methodArn = 'unit-test-arn';
     let token = 'some-unit-test-token';
+    let testAuthorizerContextResult = 'authorizerContextResult';
     let publicKeyError = new Error('unit-test-error while calling GetPublicKey');
     let jwtVerifyError = new Error('unit-test-error while verifying JWT');
     let publicKeyId = 'unit-test-kid';
@@ -107,7 +108,7 @@ describe('authorizer.js', function() {
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
-        resolvedToken: { sub: 'unit-test-public-key' },
+        resolvedToken: { sub: 'unit-test-sub' },
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {
@@ -125,12 +126,51 @@ describe('authorizer.js', function() {
                 ]
               }
             ]
+          },
+          context: {
+            jwt: token
           }
+        }
+      },
+      {
+        name: 'use custom context resolver',
+        request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        token,
+        unverifiedToken: { header: { kid: publicKeyId } },
+        publicKeyId,
+        resolvedToken: { sub: 'unit-test-sub' },
+        publicKey: 'unit-test-public-key',
+        expectedErrorResult: null,
+        expectedResult: {
+          principalId: 'unit-test-sub',
+          policyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Effect: 'Allow',
+                Action: [
+                  'execute-api:Invoke'
+                ],
+                Resource: [
+                  'arn:aws:execute-api:*:*:*'
+                ]
+              }
+            ]
+          },
+          context: {
+            authorizerContextResult: testAuthorizerContextResult
+          }
+        },
+        configuration: {
+          jwkKeyListUrl: 'unit-test-url',
+          authorizerContextResolver: () => ({
+            authorizerContextResult: testAuthorizerContextResult
+          })
         }
       }
     ];
     testCases.forEach(testCase => {
-      it(testCase.name, function() {
+      it(testCase.name, async () => {
         let logger = { log() { } };
         let loggerMock = sandbox.mock(logger);
         let requestLog = { level: 'INFO', title: 'Authorizer.getPolicy()', data: testCase.request };
@@ -139,7 +179,7 @@ describe('authorizer.js', function() {
           loggerMock.expects('log').withExactArgs(testCase.errorLog).once();
         }
 
-        let authorizer = new Authorizer(logger.log, testConfiguration);
+        let authorizer = new Authorizer(logger.log, testCase.configuration || testConfiguration);
         let authorizerMock = sandbox.mock(authorizer);
 
         let jwtManagerMock = sandbox.mock(jwtManager);
@@ -161,19 +201,18 @@ describe('authorizer.js', function() {
           }
         }
 
-        return authorizer.getPolicy(testCase.request)
-          .then(() => {
-            expect(testCase.expectedErrorResult).to.be.null;
-          })
-          .catch(err => {
-            expect(err.message).to.eql(testCase.expectedErrorResult);
-            expect(testCase.expectedResult).to.be.null;
-          })
-          .then(() => {
-            loggerMock.verify();
-            jwtManagerMock.verify();
-            authorizerMock.verify();
-          });
+        let result = null;
+        let error = null;
+        try {
+          result = await authorizer.getPolicy(testCase.request);
+        } catch (err) {
+          error = err;
+        }
+        expect(result).to.eql(testCase.expectedResult);
+        expect(error && error.message || null).to.eql(testCase.expectedErrorResult);
+        loggerMock.verify();
+        jwtManagerMock.verify();
+        authorizerMock.verify();
       });
     });
   });
