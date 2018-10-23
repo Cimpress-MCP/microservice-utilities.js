@@ -23,13 +23,21 @@ class Authorizer {
     if (!this.publicKeysPromise) {
       this.publicKeysPromise = axios.get(this.configuration.jwkKeyListUrl);
     }
-    let result = await this.publicKeysPromise;
+    let result = null;
+    try {
+      result = await this.publicKeysPromise;
+    } catch (error) {
+      this.publicKeysPromise = null;
+      this.logFunction({ level: 'ERROR', title: 'InternalServerError', details: 'Failed to get public key', error: error, method: methodArn });
+      throw new Error('InternalServerError');
+    }
+
     let jwk = result.data.keys.find(key => key.kid === kid);
     if (jwk) {
       return jwkConverter(jwk);
     }
     this.publicKeysPromise = null;
-    this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'PublicKey-Resolution-Failure', kid: kid || 'NO_KID_SPECIFIED', keys: result.data.keys });
+    this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'KID not found in public key list.', kid: kid || 'NO_KID_SPECIFIED', keys: result.data.keys });
     throw new Error('Unauthorized');
   }
 
@@ -49,45 +57,39 @@ class Authorizer {
     }
 
     let kid = unverifiedToken && unverifiedToken.header && unverifiedToken.header.kid;
-
     if (!kid) {
       this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token });
       throw new Error('Unauthorized');
     }
 
-    let key = null;
+    let key = await this.getPublicKeyPromise(kid);
+    let identity;
     try {
-      key = await this.getPublicKeyPromise(kid);
-    } catch (error) {
-      this.logFunction({ level: 'ERROR', title: 'Unauthorized', details: 'Failed to get public key', error: error, method: methodArn });
-      throw new Error('Unauthorized');
-    }
-
-    try {
-      let identity = await jwtManager.verify(token, key, { algorithms: ['RS256'] });
-      let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
-      return {
-        principalId: identity.sub,
-        policyDocument: {
-          Version: '2012-10-17',
-          Statement: [
-            {
-              Effect: 'Allow',
-              Action: [
-                'execute-api:Invoke'
-              ],
-              Resource: [
-                'arn:aws:execute-api:*:*:*'
-              ]
-            }
-          ]
-        },
-        context: resolver(identity, token)
-      };
+      identity = await jwtManager.verify(token, key, { algorithms: ['RS256'] });
     } catch (exception) {
       this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
       throw new Error('Unauthorized');
     }
+
+    let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
+    return {
+      principalId: identity.sub,
+      policyDocument: {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Action: [
+              'execute-api:Invoke'
+            ],
+            Resource: [
+              'arn:aws:execute-api:*:*:*'
+            ]
+          }
+        ]
+      },
+      context: resolver(identity, token)
+    };
   }
 
   getTokenFromAuthorizationHeader(request) {

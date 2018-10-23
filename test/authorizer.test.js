@@ -79,18 +79,6 @@ describe('authorizer.js', function() {
         expectedResult: null
       },
       {
-        name: 'fails to get public key',
-        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
-        errorLog: { level: errorlevel, title: 'Unauthorized', details: 'Failed to get public key', method: methodArn, error: publicKeyError },
-        token,
-        unverifiedToken: { header: { kid: publicKeyId } },
-        publicKeyError,
-        publicKeyId,
-        publicKey: 'unit-test-public-key',
-        expectedErrorResult: 'Unauthorized',
-        expectedResult: null
-      },
-      {
         name: 'fails when jwt verification fails',
         request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
         errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Error verifying token', method: methodArn, error: jwtVerifyError },
