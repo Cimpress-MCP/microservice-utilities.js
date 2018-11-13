@@ -28,7 +28,7 @@ class Authorizer {
       result = await this.publicKeysPromise;
     } catch (error) {
       this.publicKeysPromise = null;
-      this.logFunction({ level: 'ERROR', title: 'InternalServerError', details: 'Failed to get public key', error: error, method: methodArn });
+      this.logFunction({ level: 'ERROR', title: 'InternalServerError', details: 'Failed to get public key', error: error });
       throw new Error('InternalServerError');
     }
 

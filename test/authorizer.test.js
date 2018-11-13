@@ -25,7 +25,6 @@ describe('authorizer.js', function() {
     let publicKeyError = new Error('unit-test-error while calling GetPublicKey');
     let jwtVerifyError = new Error('unit-test-error while verifying JWT');
     let publicKeyId = 'unit-test-kid';
-    let errorlevel = 'ERROR';
     let warnlevel = 'WARN';
 
     let testCases = [
