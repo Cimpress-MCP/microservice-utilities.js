@@ -40,7 +40,19 @@ class RequestLogger {
       return innerPayload.replace(/(eyJ[a-zA-Z0-9_-]{5,}\.eyJ[a-zA-Z0-9_-]{5,})\.[a-zA-Z0-9_-]*/gi, (m, p1) => `${p1}.<sig>`);
     };
 
-    this.logFunction(truncateToken(stringify(payload, null, this.jsonSpace)));
+    let stringifiedPayload = truncateToken(stringify(payload, null, this.jsonSpace));
+    // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html 256KB => 32768 characters
+    if (stringifiedPayload.length >= 32768) {
+      let replacementPayload = {
+        message: {
+          title: 'Payload too large',
+          fields: Object.keys(payload),
+          truncatedPayload: stringifiedPayload.substring(0, 10000)
+        }
+      };
+      stringifiedPayload = stringify(replacementPayload, null, this.jsonSpace);
+    }
+    this.logFunction(stringifiedPayload);
   }
 }
 

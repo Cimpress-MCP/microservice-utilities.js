@@ -116,6 +116,20 @@ describe('RequestLogger', () => {
         }
       },
       {
+        name: 'truncates too large payloads',
+        message: {
+          title: 'Platform Request Error',
+          exception: {
+            message: [...Array(100000)].map(() => 1).join('')
+          }
+        },
+        expectedMessage: {
+          title: 'Payload too large',
+          fields: ['message'],
+          truncatedPayload: `{\n  "message": {\n    "title": "Platform Request Error",\n    "exception": {\n      "message": "${[...Array(9907)].map(() => 1).join('')}`
+        }
+      },
+      {
         name: 'errors are serialized correctly',
         message: {
           messageType: 'Platform Request Error',
