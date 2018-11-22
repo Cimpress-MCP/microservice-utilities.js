@@ -41,7 +41,8 @@ class RequestLogger {
     };
 
     let stringifiedPayload = truncateToken(stringify(payload, null, this.jsonSpace));
-    // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html 256KB => 32768 characters
+    // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html 256KB, but other services have a much lower limit.
+    // * To be safe we'll use 32KB => 327686 1byte characters (this is actually less since some unicode characters are greater than 1 byte each.)
     if (stringifiedPayload.length >= 32768) {
       let replacementPayload = {
         message: {
