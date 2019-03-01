@@ -1,4 +1,5 @@
 const stringify = require('json-stringify-safe');
+const uuid = require('uuid');
 
 class RequestLogger {
   /**
@@ -15,6 +16,15 @@ class RequestLogger {
     if (configuration.extendErrorObjects) {
       require('error-object-polyfill');
     }
+
+    this.invocationId = null;
+  }
+
+  /**
+   * Create a new invocation which will end up setting the additional invocation metadata for the request, which will be used when logging.
+   */
+  startInvocation() {
+    this.invocationId = uuid.v4();
   }
 
   log(message) {
@@ -33,6 +43,7 @@ class RequestLogger {
     }
 
     let payload = {
+      invocationId: this.invocationId,
       message: messageAsObject
     };
 
@@ -44,6 +55,7 @@ class RequestLogger {
     // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html 256KB => 32768 characters
     if (stringifiedPayload.length >= 32768) {
       let replacementPayload = {
+        invocationId: this.invocationId,
         message: {
           title: 'Payload too large',
           fields: Object.keys(payload),

@@ -125,8 +125,8 @@ describe('RequestLogger', () => {
         },
         expectedMessage: {
           title: 'Payload too large',
-          fields: ['message'],
-          truncatedPayload: `{\n  "message": {\n    "title": "Platform Request Error",\n    "exception": {\n      "message": "${[...Array(9907)].map(() => 1).join('')}`
+          fields: ['invocationId', 'message'],
+          truncatedPayload: `{\n  "invocationId": null,\n  "message": {\n    "title": "Platform Request Error",\n    "exception": {\n      "message": "${[...Array(9883)].map(() => 1).join('')}`
         }
       },
       {
@@ -147,7 +147,7 @@ describe('RequestLogger', () => {
     testCases.map(testCase => {
       it(testCase.name, () => {
         let jsonSpace = testCase.jsonSpace === undefined ? 2 : testCase.jsonSpace;
-        let logObj = { message: testCase.expectedMessage };
+        let logObj = { invocationId: null, message: testCase.expectedMessage };
         let expectedLogString = JSON.stringify(logObj, null, jsonSpace);
 
         let logger = { log() { } };
