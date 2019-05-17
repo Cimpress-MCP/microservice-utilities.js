@@ -1,6 +1,7 @@
 const axios = require('axios');
 const jwtManager = require('jsonwebtoken');
 const jwkConverter = require('jwk-to-pem');
+const aws = require('aws-sdk');
 
 class Authorizer {
   /**
@@ -41,6 +42,60 @@ class Authorizer {
     throw new Error('Unauthorized');
   }
 
+  async getApiKey(apiGateway, clientId) {
+    try {
+      const apiKeys = await apiGateway.getApiKeys({ nameQuery: clientId, includeValues: true, limit: 1 }).promise();
+      const apiKey = apiKeys.items[0];
+
+      if (apiKey && apiKey.id) {
+        return apiKey;
+      }
+      console.log(apiKeys);
+      throw new Error('Usage Api Key Id is not present');
+    } catch (e) {
+      console.error(e.message);
+      console.info('creating key');
+    }
+
+    return apiGateway.createApiKey({
+      description: `Key for client ${clientId}`,
+      enabled: true,
+      generateDistinctId: true,
+      name: clientId,
+      value: clientId
+    }).promise();
+  }
+
+  async ensurePlanKey(apiGateway, apiKey) {
+    try {
+      const usagePlanKey = await apiGateway.getUsagePlanKey({
+        keyId: apiKey.id,
+        usagePlanId: this.configuration.usagePlan
+      }).promise();
+
+      if (usagePlanKey && usagePlanKey.id) {
+        return usagePlanKey;
+      }
+      throw new Error('Usage Plan Key Id is not present');
+    } catch (e) {
+      console.error(e.message);
+      console.info('creating key');
+    }
+
+    return apiGateway.createUsagePlanKey({
+      keyId: apiKey.id,
+      usagePlanId: this.configuration.usagePlan,
+      keyType: 'API_KEY'
+    }).promise();
+  }
+
+  async resolveApiKey(identity) {
+    const apiGateway = new aws.APIGateway();
+    const key = await this.getApiKey(apiGateway, identity);
+    await this.ensurePlanKey(apiGateway, key);
+    return key.value;
+  }
+
   async getPolicy(request) {
     this.logFunction({ level: 'INFO', title: 'Authorizer.getPolicy()', data: request });
     let methodArn = request.methodArn;
@@ -72,7 +127,7 @@ class Authorizer {
     }
 
     let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
-    return {
+    const policy = {
       principalId: identity.sub,
       policyDocument: {
         Version: '2012-10-17',
@@ -90,6 +145,12 @@ class Authorizer {
       },
       context: resolver(identity, token)
     };
+
+    if (this.configuration.usagePlan) {
+      policy.policyDocument.usageIdentifierKey = await this.resolveApiKey(identity.sub);
+    }
+
+    return policy;
   }
 
   getTokenFromAuthorizationHeader(request) {
