@@ -42,7 +42,8 @@ class Authorizer {
     throw new Error('Unauthorized');
   }
 
-  async getApiKey(apiGateway, clientId) {
+  async ensureApiKey(clientId) {
+    const apiGateway = new aws.APIGateway();
     let apiKey;
     try {
       const apiKeys = await apiGateway.getApiKeys({ nameQuery: clientId, includeValues: true, limit: 1 }).promise();
@@ -67,54 +68,19 @@ class Authorizer {
       clientId: clientId
     });
 
-    return apiGateway.createApiKey({
+    const newKey = await apiGateway.createApiKey({
       description: `Key for client ${clientId}`,
       enabled: true,
       generateDistinctId: true,
       name: clientId,
       value: clientId
     }).promise();
-  }
-
-  async ensurePlanKey(apiGateway, apiKey) {
-    let usagePlanKey;
-    try {
-      usagePlanKey = await apiGateway.getUsagePlanKey({
-        keyId: apiKey.id,
-        usagePlanId: this.configuration.usagePlan
-      }).promise();
-    } catch (e) {
-      this.logFunction({
-        level: 'ERROR',
-        title: 'FailedToGetUsagePlans',
-        details: 'Usage Plan Key Id is not present',
-        usagePlan: this.configuration.usagePlan,
-        error: e });
-    }
-
-    if (usagePlanKey && usagePlanKey.id) {
-      return usagePlanKey;
-    }
-    this.logFunction({
-      level: 'INFO',
-      title: 'ApiKeyNotPresentInUsagePlan',
-      details: 'Api key is not present in the usage plan, attempting to add it.',
-      usagePlan: this.configuration.usagePlan,
-      apiKey: apiKey
-    });
 
     return apiGateway.createUsagePlanKey({
-      keyId: apiKey.id,
+      keyId: newKey.id,
       usagePlanId: this.configuration.usagePlan,
       keyType: 'API_KEY'
     }).promise();
-  }
-
-  async resolveApiKey(identity) {
-    const apiGateway = new aws.APIGateway();
-    const key = await this.getApiKey(apiGateway, identity);
-    await this.ensurePlanKey(apiGateway, key);
-    return key.value;
   }
 
   getCliendId(identity) {
@@ -152,11 +118,9 @@ class Authorizer {
       throw new Error('Unauthorized');
     }
 
-    const clientId = this.getCliendId(identity);
-
     let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
     const policy = {
-      principalId: clientId,
+      principalId: identity.sub,
       policyDocument: {
         Version: '2012-10-17',
         Statement: [
@@ -175,7 +139,18 @@ class Authorizer {
     };
 
     if (this.configuration.usagePlan) {
-      policy.policyDocument.usageIdentifierKey = await this.resolveApiKey(clientId);
+      policy.policyDocument.usageIdentifierKey = this.getCliendId(identity);
+      try {
+        await this.ensureApiKey(policy.policyDocument.usageIdentifierKey);
+      } catch (e) {
+        this.logFunction({
+          level: 'Error',
+          title: 'FailedToEnsureApiKey',
+          details: 'Failed to ensure that an api key exists',
+          clientId: policy.policyDocument.usageIdentifierKey,
+          error: e
+        });
+      }
     }
 
     return policy;

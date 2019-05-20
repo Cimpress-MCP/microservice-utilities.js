@@ -99,7 +99,7 @@ describe('authorizer.js', function() {
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {
-          principalId: 'unit-test-azp',
+          principalId: 'unit-test-sub',
           policyDocument: {
             Version: '2012-10-17',
             Statement: [
@@ -129,7 +129,7 @@ describe('authorizer.js', function() {
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {
-          principalId: 'unit-test-sub',
+          principalId: 'unit-test-sub@clients',
           policyDocument: {
             Version: '2012-10-17',
             Statement: [
@@ -159,7 +159,7 @@ describe('authorizer.js', function() {
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {
-          principalId: 'unit-test-azp',
+          principalId: 'unit-test-sub',
           policyDocument: {
             Version: '2012-10-17',
             Statement: [
