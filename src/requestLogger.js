@@ -9,32 +9,24 @@ class RequestLogger {
    * @param {Boolean}  configuration.extendErrorObjects extends Error object globally in order to provide proper JSON
    *                   representation of Error objects.
    * @param {Number}   configuration.jsonSpace the number of spaces that are used then stringifying the message.
-   * @param {Object}   configuration.staticData Any static data that are assigned to every log message. Typical might be an environment parameter or version number.
    */
-  constructor(configuration = { logFunction: console.log, extendErrorObjects: true, jsonSpace: 2, staticData: undefined }) {
+  constructor(configuration = { logFunction: console.log, extendErrorObjects: true, jsonSpace: 2 }) {
     this.logFunction = configuration.logFunction;
     this.jsonSpace = configuration.jsonSpace === null || configuration.jsonSpace === undefined ? 2 : configuration.jsonSpace;
     if (configuration.extendErrorObjects) {
       require('error-object-polyfill');
     }
-    this.staticData = configuration.staticData;
 
     this.invocationId = null;
   }
 
   /**
    * Create a new invocation which will end up setting the additional invocation metadata for the request, which will be used when logging.
-   */
-  startInvocation() {
-    this.invocationId = uuid.v4();
-  }
-
-  /**
-   * Allows to set the static data. It will override static data specified with the configuration at construction time.
    * @param {Object} staticData Any static data that are assigned to every log message. Typical might be an environment parameter or version number.
    */
-  setStaticData(staticData) {
+  startInvocation(staticData) {
     this.staticData = staticData;
+    this.invocationId = uuid.v4();
   }
 
   log(message) {
@@ -53,8 +45,7 @@ class RequestLogger {
     }
 
     if (this.staticData && typeof this.staticData === 'object') {
-      let baseObject = Object.assign({}, this.staticData);
-      messageAsObject = Object.assign(baseObject, messageAsObject);
+      messageAsObject = Object.assign({}, this.staticData, messageAsObject);
     }
 
     let payload = {
