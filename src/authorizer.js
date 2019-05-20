@@ -43,19 +43,29 @@ class Authorizer {
   }
 
   async getApiKey(apiGateway, clientId) {
+    let apiKey;
     try {
       const apiKeys = await apiGateway.getApiKeys({ nameQuery: clientId, includeValues: true, limit: 1 }).promise();
-      const apiKey = apiKeys.items[0];
-
-      if (apiKey && apiKey.id) {
-        return apiKey;
-      }
-      console.log(apiKeys);
-      throw new Error('Usage Api Key Id is not present');
+      apiKey = apiKeys.items[0];
     } catch (e) {
-      console.error(e.message);
-      console.info('creating key');
+      this.logFunction({
+        level: 'ERROR',
+        title: 'FailedToApiKeys',
+        details: 'An error occurred while fetching api keys',
+        clientId: clientId,
+        error: e
+      });
     }
+
+    if (apiKey && apiKey.id) {
+      return apiKey;
+    }
+    this.logFunction({
+      level: 'INFO',
+      title: 'ApiKeyNotFound',
+      details: 'No api key has been found, attempting to create one.',
+      clientId: clientId
+    });
 
     return apiGateway.createApiKey({
       description: `Key for client ${clientId}`,
@@ -67,20 +77,31 @@ class Authorizer {
   }
 
   async ensurePlanKey(apiGateway, apiKey) {
+    let usagePlanKey;
     try {
-      const usagePlanKey = await apiGateway.getUsagePlanKey({
+      usagePlanKey = await apiGateway.getUsagePlanKey({
         keyId: apiKey.id,
         usagePlanId: this.configuration.usagePlan
       }).promise();
-
-      if (usagePlanKey && usagePlanKey.id) {
-        return usagePlanKey;
-      }
-      throw new Error('Usage Plan Key Id is not present');
     } catch (e) {
-      console.error(e.message);
-      console.info('creating key');
+      this.logFunction({
+        level: 'ERROR',
+        title: 'FailedToGetUsagePlans',
+        details: 'Usage Plan Key Id is not present',
+        usagePlan: this.configuration.usagePlan,
+        error: e });
     }
+
+    if (usagePlanKey && usagePlanKey.id) {
+      return usagePlanKey;
+    }
+    this.logFunction({
+      level: 'INFO',
+      title: 'ApiKeyNotPresentInUsagePlan',
+      details: 'Api key is not present in the usage plan, attempting to add it.',
+      usagePlan: this.configuration.usagePlan,
+      apiKey: apiKey
+    });
 
     return apiGateway.createUsagePlanKey({
       keyId: apiKey.id,
