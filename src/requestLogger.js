@@ -9,13 +9,15 @@ class RequestLogger {
    * @param {Boolean}  configuration.extendErrorObjects extends Error object globally in order to provide proper JSON
    *                   representation of Error objects.
    * @param {Number}   configuration.jsonSpace the number of spaces that are used then stringifying the message.
+   * @param {Object}   configuration.staticData Any static data that are assigned to every log message. Typical might be an environment parameter or version number.
    */
-  constructor(configuration = { logFunction: console.log, extendErrorObjects: true, jsonSpace: 2 }) {
+  constructor(configuration = { logFunction: console.log, extendErrorObjects: true, jsonSpace: 2, staticData: undefined }) {
     this.logFunction = configuration.logFunction;
     this.jsonSpace = configuration.jsonSpace === null || configuration.jsonSpace === undefined ? 2 : configuration.jsonSpace;
     if (configuration.extendErrorObjects) {
       require('error-object-polyfill');
     }
+    this.staticData = configuration.staticData;
 
     this.invocationId = null;
   }
@@ -25,6 +27,14 @@ class RequestLogger {
    */
   startInvocation() {
     this.invocationId = uuid.v4();
+  }
+
+  /**
+   * Allows to set the static data. It will override static data specified with the configuration at construction time.
+   * @param {Object} staticData Any static data that are assigned to every log message. Typical might be an environment parameter or version number.
+   */
+  setStaticData(staticData) {
+    this.staticData = staticData;
   }
 
   log(message) {
@@ -40,6 +50,11 @@ class RequestLogger {
     } else if (type === 'object' && Object.keys(message).length === 0) {
       console.error('Empty message object.');
       return;
+    }
+
+    if (this.staticData && typeof this.staticData === 'object') {
+      let baseObject = Object.assign({}, this.staticData);
+      messageAsObject = Object.assign(baseObject, messageAsObject);
     }
 
     let payload = {

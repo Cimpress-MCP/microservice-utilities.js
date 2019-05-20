@@ -142,6 +142,37 @@ describe('RequestLogger', () => {
             message: expectedErrorMessage
           }
         }
+      },
+      {
+        name: 'allows to specify static data',
+        staticData: {
+          environment: 'test',
+          someValue: 'unit-test'
+        },
+        message: {
+          title: 'some message'
+        },
+        expectedMessage: {
+          environment: 'test',
+          someValue: 'unit-test',
+          title: 'some message'
+        }
+      },
+      {
+        name: 'allows to specify static data, and does not override existing value',
+        staticData: {
+          environment: 'test',
+          someValue: 'static-value'
+        },
+        message: {
+          someValue: 'dynamic-value',
+          title: 'some message'
+        },
+        expectedMessage: {
+          environment: 'test',
+          someValue: 'dynamic-value',
+          title: 'some message'
+        }
       }
     ];
     testCases.map(testCase => {
@@ -154,7 +185,7 @@ describe('RequestLogger', () => {
         let loggerMock = sandbox.mock(logger);
         loggerMock.expects('log').withExactArgs(expectedLogString);
 
-        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true, jsonSpace });
+        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true, jsonSpace, staticData: testCase.staticData });
         requestLogger.log(testCase.message);
 
         loggerMock.verify();
