@@ -126,8 +126,9 @@ describe('RequestLogger', () => {
         expectedMessage: {
           title: 'Payload too large',
           fields: ['invocationId', 'message'],
-          truncatedPayload: `{\n  "invocationId": null,\n  "message": {\n    "title": "Platform Request Error",\n    "exception": {\n      "message": "${[...Array(9883)].map(() => 1).join('')}`
-        }
+          truncatedPayload: `{\n  "invocationId": "{{invocationId}}",\n  "message": {\n    "title": "Platform Request Error",\n    "exception": {\n      "message": "${[...Array(9849)].map(() => 1).join('')}`
+        },
+        resetInvocationId: true
       },
       {
         name: 'errors are serialized correctly',
@@ -142,19 +143,55 @@ describe('RequestLogger', () => {
             message: expectedErrorMessage
           }
         }
+      },
+      {
+        name: 'allows to specify static data',
+        staticData: {
+          environment: 'test',
+          someValue: 'unit-test'
+        },
+        message: {
+          title: 'some message'
+        },
+        expectedMessage: {
+          environment: 'test',
+          someValue: 'unit-test',
+          title: 'some message'
+        }
+      },
+      {
+        name: 'allows to specify static data, and does not override existing value',
+        staticData: {
+          environment: 'test',
+          someValue: 'static-value'
+        },
+        message: {
+          someValue: 'dynamic-value',
+          title: 'some message'
+        },
+        expectedMessage: {
+          environment: 'test',
+          someValue: 'dynamic-value',
+          title: 'some message'
+        }
       }
     ];
     testCases.map(testCase => {
       it(testCase.name, () => {
         let jsonSpace = testCase.jsonSpace === undefined ? 2 : testCase.jsonSpace;
-        let logObj = { invocationId: null, message: testCase.expectedMessage };
-        let expectedLogString = JSON.stringify(logObj, null, jsonSpace);
-
+        
         let logger = { log() { } };
         let loggerMock = sandbox.mock(logger);
-        loggerMock.expects('log').withExactArgs(expectedLogString);
+        let logFunc = msg => logger.log(msg);
 
-        let requestLogger = new RequestLogger({ logFunction: logger.log, extendErrorObjects: true, jsonSpace });
+        let requestLogger = new RequestLogger({ logFunction: logFunc, extendErrorObjects: true, jsonSpace });
+        requestLogger.startInvocation(testCase.staticData);
+        
+        let logObj = { invocationId: requestLogger.invocationId, message: testCase.expectedMessage };
+        let expectedLogString = JSON.stringify(logObj, null, jsonSpace);
+        expectedLogString = expectedLogString.replace(/{{invocationId}}/, requestLogger.invocationId);
+        loggerMock.expects('log').withExactArgs(expectedLogString);
+        
         requestLogger.log(testCase.message);
 
         loggerMock.verify();
