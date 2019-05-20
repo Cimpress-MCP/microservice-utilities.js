@@ -22,8 +22,10 @@ class RequestLogger {
 
   /**
    * Create a new invocation which will end up setting the additional invocation metadata for the request, which will be used when logging.
+   * @param {Object} staticData Any static data that are assigned to every log message. Typical might be an environment parameter or version number.
    */
-  startInvocation() {
+  startInvocation(staticData) {
+    this.staticData = staticData;
     this.invocationId = uuid.v4();
   }
 
@@ -40,6 +42,10 @@ class RequestLogger {
     } else if (type === 'object' && Object.keys(message).length === 0) {
       console.error('Empty message object.');
       return;
+    }
+
+    if (this.staticData && typeof this.staticData === 'object') {
+      messageAsObject = Object.assign({}, this.staticData, messageAsObject);
     }
 
     let payload = {
