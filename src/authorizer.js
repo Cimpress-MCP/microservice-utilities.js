@@ -117,6 +117,11 @@ class Authorizer {
     return key.value;
   }
 
+  getCliendId(identity) {
+    const principalId = identity.sub;
+    return principalId.endsWith('@clients') ? principalId.split('@')[0] : identity.azp;
+  }
+
   async getPolicy(request) {
     this.logFunction({ level: 'INFO', title: 'Authorizer.getPolicy()', data: request });
     let methodArn = request.methodArn;
@@ -147,9 +152,11 @@ class Authorizer {
       throw new Error('Unauthorized');
     }
 
+    const clientId = this.getCliendId(identity);
+
     let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
     const policy = {
-      principalId: identity.sub,
+      principalId: clientId,
       policyDocument: {
         Version: '2012-10-17',
         Statement: [
@@ -168,7 +175,7 @@ class Authorizer {
     };
 
     if (this.configuration.usagePlan) {
-      policy.policyDocument.usageIdentifierKey = await this.resolveApiKey(identity.sub);
+      policy.policyDocument.usageIdentifierKey = await this.resolveApiKey(clientId);
     }
 
     return policy;
