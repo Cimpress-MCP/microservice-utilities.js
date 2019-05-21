@@ -35,9 +35,10 @@
     "uuid": "^3.2.1"
   },
   "devDependencies": {
+    "aws-sdk": "2.457.0",
     "chai": "^3.2.0",
-    "commander": "^2.5.0",
     "ci-build-tools": "1.0.9",
+    "commander": "^2.5.0",
     "eslint": "4.17.0",
     "eslint-config-cimpress-atsquad": "^1.0.32",
     "eslint-friendly-formatter": "3.0.0",

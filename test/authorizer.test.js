@@ -95,11 +95,41 @@ describe('authorizer.js', function() {
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
-        resolvedToken: { sub: 'unit-test-sub' },
+        resolvedToken: { sub: 'unit-test-sub', azp: 'unit-test-azp' },
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {
           principalId: 'unit-test-sub',
+          policyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Effect: 'Allow',
+                Action: [
+                  'execute-api:Invoke'
+                ],
+                Resource: [
+                  'arn:aws:execute-api:*:*:*'
+                ]
+              }
+            ]
+          },
+          context: {
+            jwt: token
+          }
+        }
+      },
+      {
+        name: 'resolves principal with client token',
+        request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        token,
+        unverifiedToken: { header: { kid: publicKeyId } },
+        publicKeyId,
+        resolvedToken: { sub: 'unit-test-sub@clients', azp: 'unit-test-azp' },
+        publicKey: 'unit-test-public-key',
+        expectedErrorResult: null,
+        expectedResult: {
+          principalId: 'unit-test-sub@clients',
           policyDocument: {
             Version: '2012-10-17',
             Statement: [
@@ -125,7 +155,7 @@ describe('authorizer.js', function() {
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
-        resolvedToken: { sub: 'unit-test-sub' },
+        resolvedToken: { sub: 'unit-test-sub', azp: 'unit-test-azp' },
         publicKey: 'unit-test-public-key',
         expectedErrorResult: null,
         expectedResult: {

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const jwtManager = require('jsonwebtoken');
 const jwkConverter = require('jwk-to-pem');
+const aws = require('aws-sdk');
 
 class Authorizer {
   /**
@@ -41,6 +42,52 @@ class Authorizer {
     throw new Error('Unauthorized');
   }
 
+  async ensureApiKey(clientId) {
+    const apiGateway = new aws.APIGateway();
+    let apiKey;
+    try {
+      const apiKeys = await apiGateway.getApiKeys({ nameQuery: clientId, includeValues: true, limit: 1 }).promise();
+      apiKey = apiKeys.items[0];
+    } catch (e) {
+      this.logFunction({
+        level: 'ERROR',
+        title: 'FailedToApiKeys',
+        details: 'An error occurred while fetching api keys',
+        clientId: clientId,
+        error: e
+      });
+    }
+
+    if (apiKey && apiKey.id) {
+      return apiKey;
+    }
+    this.logFunction({
+      level: 'INFO',
+      title: 'ApiKeyNotFound',
+      details: 'No api key has been found, attempting to create one.',
+      clientId: clientId
+    });
+
+    const newKey = await apiGateway.createApiKey({
+      description: `Key for client ${clientId}`,
+      enabled: true,
+      generateDistinctId: true,
+      name: clientId,
+      value: clientId
+    }).promise();
+
+    return apiGateway.createUsagePlanKey({
+      keyId: newKey.id,
+      usagePlanId: this.configuration.usagePlan,
+      keyType: 'API_KEY'
+    }).promise();
+  }
+
+  getCliendId(identity) {
+    const principalId = identity.sub;
+    return principalId.endsWith('@clients') ? principalId.split('@')[0] : identity.azp;
+  }
+
   async getPolicy(request) {
     this.logFunction({ level: 'INFO', title: 'Authorizer.getPolicy()', data: request });
     let methodArn = request.methodArn;
@@ -72,7 +119,7 @@ class Authorizer {
     }
 
     let resolver = this.configuration.authorizerContextResolver || (() => ({ jwt: token }));
-    return {
+    const policy = {
       principalId: identity.sub,
       policyDocument: {
         Version: '2012-10-17',
@@ -90,6 +137,23 @@ class Authorizer {
       },
       context: resolver(identity, token)
     };
+
+    if (this.configuration.usagePlan) {
+      policy.policyDocument.usageIdentifierKey = this.getCliendId(identity);
+      try {
+        await this.ensureApiKey(policy.policyDocument.usageIdentifierKey);
+      } catch (e) {
+        this.logFunction({
+          level: 'Error',
+          title: 'FailedToEnsureApiKey',
+          details: 'Failed to ensure that an api key exists',
+          clientId: policy.policyDocument.usageIdentifierKey,
+          error: e
+        });
+      }
+    }
+
+    return policy;
   }
 
   getTokenFromAuthorizationHeader(request) {
