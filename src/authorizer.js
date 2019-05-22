@@ -139,15 +139,15 @@ class Authorizer {
     };
 
     if (this.configuration.usagePlan) {
-      policy.policyDocument.usageIdentifierKey = this.getCliendId(identity);
+      policy.usageIdentifierKey = this.getCliendId(identity);
       try {
-        await this.ensureApiKey(policy.policyDocument.usageIdentifierKey);
+        await this.ensureApiKey(policy.usageIdentifierKey);
       } catch (e) {
         this.logFunction({
           level: 'Error',
           title: 'FailedToEnsureApiKey',
           details: 'Failed to ensure that an api key exists',
-          clientId: policy.policyDocument.usageIdentifierKey,
+          clientId: policy.usageIdentifierKey,
           error: e
         });
       }
