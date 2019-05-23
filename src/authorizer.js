@@ -10,6 +10,7 @@ class Authorizer {
    * @param {Object}   configuration configuration object
    * @param {String}   configuration.jwkKeyListUrl url used to retrieve the jwk public keys
    * @param {String}   configuration.authorizerContextResolver function to populate the authorizer context, by default it will only contain the JWT. function(identity, token) {}
+   * @param {String}   configuration.usagePlan An AWS Api Gateway usage plan ID, this will create an api key and attach it to the returned policy document.
    */
   constructor(logFunction, configuration = {}) {
     this.logFunction = logFunction || console.log;
