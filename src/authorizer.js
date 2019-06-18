@@ -100,7 +100,7 @@ class Authorizer {
 
     let unverifiedToken = jwtManager.decode(token, { complete: true });
     if (!unverifiedToken) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn, token });
       throw new Error('Unauthorized');
     }
 
