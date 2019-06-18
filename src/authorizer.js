@@ -115,7 +115,7 @@ class Authorizer {
     try {
       identity = await jwtManager.verify(token, key, { algorithms: ['RS256'] });
     } catch (exception) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn, token });
       throw new Error('Unauthorized');
     }
 
