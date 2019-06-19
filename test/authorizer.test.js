@@ -59,7 +59,7 @@ describe('authorizer.js', function() {
       {
         name: 'fails when invalid token specified',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn },
+        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn, token },
         token,
         unverifiedToken: null,
         expectedErrorResult: 'Unauthorized',
@@ -80,7 +80,7 @@ describe('authorizer.js', function() {
       {
         name: 'fails when jwt verification fails',
         request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Error verifying token', method: methodArn, error: jwtVerifyError },
+        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Error verifying token', method: methodArn, error: jwtVerifyError, token },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         jwtVerifyError,
