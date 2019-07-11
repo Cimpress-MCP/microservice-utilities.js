@@ -39,7 +39,21 @@ npm install openapi-factory
 ```javascript
 const Api = require('openapi-factory');
 const { Authorizer, RequestLogger } = require('microservice-utilities');
-const configuration = { jwkKeyListUrl: 'https://example.com/.well-known/jwks.json' };
+const configuration = {
+  // URL to get jwk keys to verify token
+  jwkKeyListUrl: 'https://example.com/.well-known/jwks.json',
+  // custom resolver that returns additional context form the AWS Lambda authorizer
+  authorizerContextResolver: (identity, token) => ({
+    authorizerContextResult: 'my context'
+  }),
+  // optional AWS API Gateway usage plan
+  // See details at https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html
+  usagePlan: 'usage-plan-id',
+  // jwtVerifyOptions that are passed into jsonwebtoken
+  // see https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback
+  // defaults to { algorithms: ['RS256'] }
+  jwtVerifyOptions: { algorithms: ['RS256'], audience: 'my-audience' }
+};
 
 let requestLogger = new RequestLogger();
 let authorizer = new Authorizer(msg => requestLogger.log(msg), configuration);

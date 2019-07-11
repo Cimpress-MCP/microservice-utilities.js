@@ -120,6 +120,40 @@ describe('authorizer.js', function() {
         }
       },
       {
+        name: 'resolves principal with custom JwtVerifyOptions',
+        request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        token,
+        unverifiedToken: { header: { kid: publicKeyId } },
+        publicKeyId,
+        resolvedToken: { sub: 'unit-test-sub', azp: 'unit-test-azp' },
+        publicKey: 'unit-test-public-key',
+        expectedErrorResult: null,
+        expectedResult: {
+          principalId: 'unit-test-sub',
+          policyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Effect: 'Allow',
+                Action: [
+                  'execute-api:Invoke'
+                ],
+                Resource: [
+                  'arn:aws:execute-api:*:*:*'
+                ]
+              }
+            ]
+          },
+          context: {
+            jwt: token
+          }
+        },
+        configuration: {
+          jwkKeyListUrl: 'unit-test-url',
+          jwtVerifyOptions: { unit: 'test' }
+        }
+      },
+      {
         name: 'resolves principal with client token',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
         token,
@@ -209,7 +243,7 @@ describe('authorizer.js', function() {
             expectation.rejects(testCase.publicKeyError);
           } else if (testCase.unverifiedToken) {
             expectation.resolves(testCase.publicKey);
-            let jwtExpectation = jwtManagerMock.expects('verify').withExactArgs(testCase.token, testCase.publicKey, { algorithms: ['RS256'] });
+            let jwtExpectation = jwtManagerMock.expects('verify').withExactArgs(testCase.token, testCase.publicKey, testCase.configuration && testCase.configuration.jwtVerifyOptions || { algorithms: ['RS256'] });
             if (testCase.jwtVerifyError) {
               jwtExpectation.throws(jwtVerifyError);
             } else {

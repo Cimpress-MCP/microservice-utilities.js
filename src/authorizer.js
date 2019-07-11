@@ -11,6 +11,7 @@ class Authorizer {
    * @param {String}   configuration.jwkKeyListUrl url used to retrieve the jwk public keys
    * @param {String}   configuration.authorizerContextResolver function to populate the authorizer context, by default it will only contain the JWT. function(identity, token) {}
    * @param {String}   configuration.usagePlan An AWS Api Gateway usage plan ID, this will create an api key and attach it to the returned policy document.
+   * @param {String}   configuration.jwtVerifyOptions parameters that are passed to the JWT verification options. Defaults to { algorithms: ['RS256'] }
    */
   constructor(logFunction, configuration = {}) {
     this.logFunction = logFunction || console.log;
@@ -19,6 +20,7 @@ class Authorizer {
     }
     this.configuration = configuration;
     this.publicKeysPromise = null;
+    this.jwtVerifyOptions = configuration.jwtVerifyOptions || { algorithms: ['RS256'] };
   }
 
   async getPublicKeyPromise(kid) {
@@ -113,7 +115,7 @@ class Authorizer {
     let key = await this.getPublicKeyPromise(kid);
     let identity;
     try {
-      identity = await jwtManager.verify(token, key, { algorithms: ['RS256'] });
+      identity = await jwtManager.verify(token, key, this.jwtVerifyOptions);
     } catch (exception) {
       this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn, token });
       throw new Error('Unauthorized');
