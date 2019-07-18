@@ -64,6 +64,7 @@ class RequestLogger {
         invocationId: this.invocationId,
         message: {
           title: 'Payload too large',
+          level: payload && payload.message && payload.message.level,
           fields: Object.keys(payload),
           truncatedPayload: stringifiedPayload.substring(0, 10000)
         }
