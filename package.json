@@ -34,8 +34,10 @@
     "jwk-to-pem": "^1.2.6",
     "uuid": "^3.2.1"
   },
+  "peerDependencies":{
+    "aws-sdk": "^2.0.0"
+  },
   "devDependencies": {
-    "aws-sdk": "2.457.0",
     "chai": "^3.2.0",
     "ci-build-tools": "1.0.9",
     "commander": "^2.5.0",
