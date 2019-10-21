@@ -1,7 +1,6 @@
 const axios = require('axios');
 const jwtManager = require('jsonwebtoken');
 const jwkConverter = require('jwk-to-pem');
-const aws = require('aws-sdk');
 
 class Authorizer {
   /**
@@ -46,6 +45,7 @@ class Authorizer {
   }
 
   async ensureApiKey(clientId) {
+    const aws = require('aws-sdk');
     const apiGateway = new aws.APIGateway();
     let apiKey;
     try {
