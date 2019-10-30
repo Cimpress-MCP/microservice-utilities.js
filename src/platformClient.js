@@ -132,6 +132,7 @@ class PlatformClient {
 
   /**
    * Delete the resource on the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @see {@link deleteWithBody} if you need a body in your delete call.
    * @param {String} url to send the request to
    * @param {Object} headers request headers
    * @return {Promise<Object>}
@@ -139,6 +140,20 @@ class PlatformClient {
   async delete(url, headers) {
     return this.client.delete(url, {
       headers: await this.createHeadersWithResolvedToken(headers)
+    });
+  }
+
+  /**
+   * Delete the resource on the given url. Bearer token is automatically injected if tokenResolverFunction was provided to the constructor.
+   * @param {String} url to send the request to
+   * @param {String} data to send in the request body
+   * @param {Object} headers request headers
+   * @return {Promise<Object>}
+   */
+  async deleteWithBody(url, data, headers) {
+    return this.client.delete(url, {
+      headers: await this.createHeadersWithResolvedToken(headers),
+      data
     });
   }
 

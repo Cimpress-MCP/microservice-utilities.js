@@ -142,6 +142,31 @@ describe('PlatformClient', () => {
     });
   });
 
+  describe('deleteWithBody()', () => {
+    it('injects the resolved token into Authorization header', async () => {
+      const testUrl = 'unit-test-url';
+      const testData = 'unit-test-data';
+      const testToken = 'unit-test-token';
+      const testHeaders = { UnitTestHeader: 'unit-test-header-value' };
+      const expectedHeaders = { UnitTestHeader: 'unit-test-header-value', Authorization: `Bearer ${testToken}` };
+
+      let tokenResolverFunctionMock = sandbox.stub();
+      tokenResolverFunctionMock.resolves(testToken);
+
+      let httpClient = { delete() {} };
+      let httpClientMock = sandbox.mock(httpClient);
+      httpClientMock.expects('delete').withExactArgs(testUrl, { headers: expectedHeaders, data: testData }).resolves();
+
+      let platformClient = new PlatformClient(null, tokenResolverFunctionMock);
+      platformClient.client = httpClient;
+
+      await platformClient.deleteWithBody(testUrl, testData, testHeaders);
+
+      expect(tokenResolverFunctionMock.calledOnce).to.equal(true);
+      httpClientMock.verify();
+    });
+  });
+
   describe('head()', () => {
     it('injects the resolved token into Authorization header', async () => {
       const testUrl = 'unit-test-url';
