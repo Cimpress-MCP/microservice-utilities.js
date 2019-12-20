@@ -35,7 +35,7 @@ class Authorizer {
       throw new Error('InternalServerError');
     }
 
-    let jwk = result.data.keys.find(key => key.kid === kid);
+    let jwk = result.data.keys && result.data.keys.find(key => key.kid === kid);
     if (jwk) {
       return jwkConverter(jwk);
     }
