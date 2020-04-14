@@ -94,21 +94,22 @@ class Authorizer {
   async getPolicy(request) {
     this.logFunction({ level: 'INFO', title: 'Authorizer.getPolicy()', data: request });
     let methodArn = request.methodArn;
+    let path = request.path;
     let token = this.getTokenFromAuthorizationHeader(request);
     if (!token) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'No token specified', method: methodArn });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'No token specified', method: methodArn, path });
       throw new Error('Unauthorized');
     }
 
     let unverifiedToken = jwtManager.decode(token, { complete: true });
     if (!unverifiedToken) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn, token });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Invalid token', method: methodArn, token, path });
       throw new Error('Unauthorized');
     }
 
     let kid = unverifiedToken && unverifiedToken.header && unverifiedToken.header.kid;
     if (!kid) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token, path });
       throw new Error('Unauthorized');
     }
 
@@ -117,7 +118,7 @@ class Authorizer {
     try {
       identity = await jwtManager.verify(token, key, this.jwtVerifyOptions);
     } catch (exception) {
-      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn, token });
+      this.logFunction({ level: 'WARN', title: 'Unauthorized', details: 'Error verifying token', error: exception, method: methodArn, token, path });
       throw new Error('Unauthorized');
     }
 
