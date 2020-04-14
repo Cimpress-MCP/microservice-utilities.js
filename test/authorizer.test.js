@@ -11,10 +11,10 @@ const jwtManager = require('jsonwebtoken');
 
 describe('authorizer.js', function() {
   let sandbox;
-  beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
   });
-  afterEach(function() {
+  afterEach(() => {
     sandbox.restore();
   });
   describe('getPolicy()', function() {

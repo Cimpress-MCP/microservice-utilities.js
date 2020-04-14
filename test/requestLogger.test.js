@@ -8,7 +8,7 @@ const RequestLogger = require('../src/requestLogger');
 describe('RequestLogger', () => {
   let sandbox;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     sandbox.restore();
