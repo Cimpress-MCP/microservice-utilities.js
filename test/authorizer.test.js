@@ -26,40 +26,41 @@ describe('authorizer.js', function() {
     let jwtVerifyError = new Error('unit-test-error while verifying JWT');
     let publicKeyId = 'unit-test-kid';
     let warnlevel = 'WARN';
+    let path = 'unit-test-path';
 
     let testCases = [
       {
         name: 'fails when header not available in request',
-        request: { methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn },
+        request: { methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn, data: { methodArn, path } },
         expectedErrorResult: 'Unauthorized',
         expectedResult: null
       },
       {
         name: 'fails when no authorization header available',
-        request: { headers: {}, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn },
+        request: { headers: {}, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn, data: { headers: {}, methodArn, path } },
         expectedErrorResult: 'Unauthorized',
         expectedResult: null
       },
       {
         name: 'fails when invalid authorization header specified (single word)',
-        request: { headers: { authorization: 'only-single-word' }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn },
+        request: { headers: { authorization: 'only-single-word' }, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn, data: { headers: { authorization: 'only-single-word' }, methodArn, path } },
         expectedErrorResult: 'Unauthorized',
         expectedResult: null
       },
       {
         name: 'fails when invalid authorization header specified (more than two words)',
-        request: { headers: { authorization: 'more than two words' }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn },
+        request: { headers: { authorization: 'more than two words' }, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'No token specified', method: methodArn, data: { headers: { authorization: 'more than two words' }, methodArn, path } },
         expectedErrorResult: 'Unauthorized',
         expectedResult: null
       },
       {
         name: 'fails when invalid token specified',
-        request: { headers: { authorization: `Bearer ${token}` }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn, token },
+        request: { headers: { authorization: `Bearer ${token}` }, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn, token, data:{ headers: { authorization: `Bearer ${token}` }, methodArn, path } },
         token,
         unverifiedToken: null,
         expectedErrorResult: 'Unauthorized',
@@ -67,8 +68,8 @@ describe('authorizer.js', function() {
       },
       {
         name: 'no kid specified',
-        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token },
+        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'Token did no provide a KID', method: methodArn, token, data: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn, path } },
         token,
         unverifiedToken: { header: { kid: null } },
         publicKeyError,
@@ -79,8 +80,8 @@ describe('authorizer.js', function() {
       },
       {
         name: 'fails when jwt verification fails',
-        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn },
-        errorLog: { level: warnlevel, title: 'Unauthorized', details: 'Error verifying token', method: methodArn, error: jwtVerifyError, token },
+        request: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn, path },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'Error verifying token', method: methodArn, error: jwtVerifyError, token, data: { headers: { authorization: `Bearer ${token}`, kid: publicKeyId }, methodArn, path } },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         jwtVerifyError,
@@ -92,6 +93,7 @@ describe('authorizer.js', function() {
       {
         name: 'resolves principal',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        expectedLog: { level: 'INFO', title: 'Verified Token', data: { headers: { authorization: `Bearer ${token}` }, methodArn } },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
@@ -122,6 +124,7 @@ describe('authorizer.js', function() {
       {
         name: 'resolves principal with custom JwtVerifyOptions',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        expectedLog: { level: 'INFO', title: 'Verified Token', data: { headers: { authorization: `Bearer ${token}` }, methodArn } },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
@@ -156,6 +159,7 @@ describe('authorizer.js', function() {
       {
         name: 'resolves principal with client token',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        expectedLog: { level: 'INFO', title: 'Verified Token', data: { headers: { authorization: `Bearer ${token}` }, methodArn } },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
@@ -186,6 +190,7 @@ describe('authorizer.js', function() {
       {
         name: 'use custom context resolver',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn },
+        expectedLog: { level: 'INFO', title: 'Verified Token', data: { headers: { authorization: `Bearer ${token}` }, methodArn } },
         token,
         unverifiedToken: { header: { kid: publicKeyId } },
         publicKeyId,
@@ -224,10 +229,8 @@ describe('authorizer.js', function() {
       it(testCase.name, async () => {
         let logger = { log() { } };
         let loggerMock = sandbox.mock(logger);
-        let requestLog = { level: 'INFO', title: 'Authorizer.getPolicy()', data: testCase.request };
-        loggerMock.expects('log').withExactArgs(requestLog).once();
-        if (testCase.errorLog) {
-          loggerMock.expects('log').withExactArgs(testCase.errorLog).once();
+        if (testCase.expectedLog) {
+          loggerMock.expects('log').withExactArgs(testCase.expectedLog).once();
         }
 
         let authorizer = new Authorizer(logger.log, testCase.configuration || testConfiguration);
