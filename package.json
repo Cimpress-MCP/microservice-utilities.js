@@ -34,7 +34,7 @@
     "jwk-to-pem": "^1.2.6",
     "uuid": "^3.2.1"
   },
-  "peerDependencies":{
+  "peerDependencies": {
     "aws-sdk": "^2.0.0"
   },
   "devDependencies": {
