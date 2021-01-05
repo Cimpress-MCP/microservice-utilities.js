@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/Cimpress-MCP/microservice-utilities.js#readme",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "error-object-polyfill": "^1.0.13",
     "json-stringify-safe": "^5.0.1",
     "jsonwebtoken": "^8.5.1",
