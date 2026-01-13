@@ -1,4 +1,5 @@
 const jwtManager = require('jsonwebtoken');
+const { KMSClient, DecryptCommand } = require('@aws-sdk/client-kms');
 
 class ServiceTokenProvider {
   /**
@@ -56,7 +57,12 @@ class ServiceTokenProvider {
    * @returns {Promise<String>} access token
    */
   async getTokenWithoutCache() {
-    let secret = await this.kmsClient.decrypt({ CiphertextBlob: Buffer.from(this.configuration.encryptedClientSecret, 'base64') }).promise().then(data => data.Plaintext.toString());
+    const kmsClient = new KMSClient();
+    const decryptCommand = new DecryptCommand({
+      CiphertextBlob: Buffer.from(this.configuration.encryptedClientSecret, 'base64')
+    });
+    const result = await kmsClient.send(decryptCommand);
+    let secret = result.Plaintext.toString();
     let headers = { 'Content-Type': 'application/json' };
     let body = {
       client_id: this.configuration.clientId,
