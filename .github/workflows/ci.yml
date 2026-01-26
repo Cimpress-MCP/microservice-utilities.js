@@ -54,11 +54,10 @@ jobs:
     permissions:
       id-token: write # Required for OIDC trusted publishing
       contents: read
-    # Skip this job if NPM_TOKEN is not set (CI will still pass)
+    # Publish on push to master or release branches
     if: |
       github.event_name == 'push' && 
-      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) &&
-      secrets.NPM_TOKEN != ''
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
 
     steps:
       - name: Checkout code
