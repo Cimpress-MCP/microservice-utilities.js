@@ -45,17 +45,18 @@ jobs:
       - name: Verify package contents
         run: npm pack --dry-run
 
-  # Optional: Publish to npm (only runs if NPM_TOKEN secret is configured)
-  # If you prefer manual publishing, you can remove this entire job
-  # To publish manually: npm login && npm publish --access public
+  # Publish to npm using trusted publishing (OIDC) - no token needed!
+  # Trusted publishing is configured on npmjs.com for this package
   publish:
     needs: test
     runs-on: ubuntu-latest
-    # Skip this job if NPM_TOKEN is not set (CI will still pass)
     if: |
       github.event_name == 'push' && 
-      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) &&
-      secrets.NPM_TOKEN != ''
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
+    
+    permissions:
+      id-token: write  # Required for OIDC trusted publishing
+      contents: read
 
     steps:
       - name: Checkout code
@@ -81,8 +82,7 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No NODE_AUTH_TOKEN needed - uses OIDC trusted publishing
 
       - name: After build tasks
         run: node make.js after_build
