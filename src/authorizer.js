@@ -1,6 +1,7 @@
 const axios = require('axios');
 const jwtManager = require('jsonwebtoken');
 const jwkConverter = require('jwk-to-pem');
+const { APIGatewayClient, GetApiKeysCommand, CreateApiKeyCommand, CreateUsagePlanKeyCommand } = require('@aws-sdk/client-api-gateway');
 
 class Authorizer {
   /**
@@ -45,11 +46,11 @@ class Authorizer {
   }
 
   async ensureApiKey(clientId) {
-    const aws = require('aws-sdk');
-    const apiGateway = new aws.APIGateway();
+    const apiGateway = new APIGatewayClient();
     let apiKey;
     try {
-      const apiKeys = await apiGateway.getApiKeys({ nameQuery: clientId, includeValues: true, limit: 1 }).promise();
+      const command = new GetApiKeysCommand({ nameQuery: clientId, includeValues: true });
+      const apiKeys = await apiGateway.send(command);
       apiKey = apiKeys.items[0];
     } catch (e) {
       this.logFunction({
@@ -71,19 +72,19 @@ class Authorizer {
       clientId: clientId
     });
 
-    const newKey = await apiGateway.createApiKey({
+    const newKey = await apiGateway.send(new CreateApiKeyCommand({
       description: `Key for client ${clientId}`,
       enabled: true,
       generateDistinctId: true,
       name: clientId,
       value: clientId
-    }).promise();
+    }));
 
-    return apiGateway.createUsagePlanKey({
+    return apiGateway.send(new CreateUsagePlanKeyCommand({
       keyId: newKey.id,
       usagePlanId: this.configuration.usagePlan,
       keyType: 'API_KEY'
-    }).promise();
+    }));
   }
 
   getCliendId(identity) {

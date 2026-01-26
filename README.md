@@ -1,6 +1,6 @@
 # Microservice Utilities
 
-[![Build Status](https://travis-ci.org/Cimpress-MCP/microservice-utilities.js.svg?branch=master)](https://travis-ci.org/Cimpress-MCP/microservice-utilities.js)
+[![CI](https://github.com/Cimpress-MCP/microservice-utilities.js/actions/workflows/ci.yml/badge.svg)](https://github.com/Cimpress-MCP/microservice-utilities.js/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/microservice-utilities.svg)](https://www.npmjs.com/package/microservice-utilities)
 
 Utilities supporting authorization, request logging and other often required parts of microservices.
@@ -9,8 +9,10 @@ Utilities supporting authorization, request logging and other often required par
 
 Install the library.
 
+
 ```bash
-npm install microservice-utilities
+nvm use 20
+npm install microservice-utilities 
 ```
 
 ### Request Logger
@@ -122,6 +124,58 @@ const axios = require('axios');
 let axiosClient = axios.create({ timeout: 3000 });
 new PlatformClient(msg => requestLogger.log(msg), tokenResolver, { client: axiosClient });
 ```
+
+# Changelog
+
+## [Unreleased] - Major Upgrade: Node 20+ Support & AWS SDK v3 Migration
+
+### Breaking Changes
+- **Node.js Requirement**: Updated minimum Node.js version from `>=10.0.0` to `>=20.0.0`
+- **AWS SDK Migration**: Migrated from AWS SDK v2 to v3
+  - `aws-sdk` → `@aws-sdk/client-api-gateway` and `@aws-sdk/client-kms`
+  - Updated API calls to use command-based approach instead of promise-based
+  - Improved performance and reduced bundle size
+
+### Dependencies Updated
+#### Production Dependencies
+- `axios`: `^0.21.1` → `^1.13.2`
+- `jsonwebtoken`: `^8.5.1` → `^9.0.3`
+- `uuid`: `^7.0.3` → `^9.0.1`
+- `jwk-to-pem`: `^2.0.3` → `^2.0.7`
+- `error-object-polyfill`: `^1.0.13` → `^1.2.49`
+- `json-stringify-safe`: `^5.0.1` → `^5.0.1`
+
+#### Development Dependencies
+- `mocha`: `^7.1.1` → `^11.7.5`
+- `commander`: `^5.0.0` → `^12.1.0`
+- `eslint`: `^6.8.0` → `^8.57.0`
+- `sinon`: `^9.0.2` → `^21.0.1`
+- `chai`: `^4.2.0` → `^4.5.0`
+- `sinon-chai`: `^3.5.0` → `^3.7.0`
+- `fs-extra`: `^9.0.0` → `^11.3.3`
+- Updated ESLint plugins and configurations
+
+### Build & Development
+- Fixed `make.js` build script for Commander v12 compatibility
+- Updated build process to work with new dependency versions
+- All tests pass (35/35) and code lints cleanly
+- Improved package security with updated dependencies
+
+### Migration Guide
+If you're upgrading from a previous version:
+
+1. **Node.js**: Ensure you're running Node.js 20.0.0 or higher
+2. **AWS SDK**: Update your AWS service initialization:
+   ```javascript
+   // Old (v2)
+   const aws = require('aws-sdk');
+   const kms = new aws.KMS();
+
+   // New (v3)
+   const { KMSClient } = require('@aws-sdk/client-kms');
+   const kms = new KMSClient();
+   ```
+3. **Test your application** thoroughly as some dependencies may have breaking changes
 
 # Contribution
 

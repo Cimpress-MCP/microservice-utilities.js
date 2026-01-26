@@ -3,18 +3,18 @@
 /**
  * Module dependencies
  */
-const commander = require('commander');
+const { program } = require('commander');
 const fs = require('fs-extra');
 const packageMetadata = require('./package.json');
 const ci = require('ci-build-tools')(process.env.GIT_TAG_PUSHER);
 
 const version = ci.GetVersion();
-commander.version(version);
+program.version(version);
 
 /**
  * Build
  */
-commander
+program
   .command('build')
   .description('Setup require build files for npm package.')
   .action(async () => {
@@ -28,7 +28,7 @@ commander
 /**
  * After Build
  */
-commander
+program
   .command('after_build')
   .description('Publishes git tags and reports failures.')
   .action(() => {
@@ -38,4 +38,4 @@ commander
     ci.MergeDownstream('release/', 'master');
   });
 
-commander.parse(process.argv);
+program.parse(process.argv);

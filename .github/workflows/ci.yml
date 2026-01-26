@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - "release/**"
+  pull_request:
+    branches:
+      - master
+      - "release/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for ci-build-tools to work with git tags
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build package
+        run: node make.js build
+
+      - name: Verify package contents
+        run: npm pack --dry-run
+
+  # Optional: Publish to npm (only runs if NPM_TOKEN secret is configured)
+  # If you prefer manual publishing, you can remove this entire job
+  # To publish manually: npm login && npm publish --access public
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for OIDC trusted publishing
+      contents: read
+    # Publish on push to master or release branches
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build package
+        run: node make.js build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: After build tasks
+        run: node make.js after_build
+        env:
+          GIT_TAG_PUSHER: ${{ secrets.GIT_TAG_PUSHER }}

@@ -60,7 +60,7 @@ describe('authorizer.js', function() {
       {
         name: 'fails when invalid token specified',
         request: { headers: { authorization: `Bearer ${token}` }, methodArn, path },
-        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn, token, data:{ headers: { authorization: `Bearer ${token}` }, methodArn, path } },
+        expectedLog: { level: warnlevel, title: 'Unauthorized', details: 'Invalid token', method: methodArn, token, data: { headers: { authorization: `Bearer ${token}` }, methodArn, path } },
         token,
         unverifiedToken: null,
         expectedErrorResult: 'Unauthorized',
