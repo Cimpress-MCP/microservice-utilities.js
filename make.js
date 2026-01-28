@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 const packageMetadata = require('./package.json');
 const ci = require('ci-build-tools')(process.env.GIT_TAG_PUSHER);
 
-const version = ci.GetVersion();
+const version = process.env.VERSION || ci.GetVersion();
 program.version(version);
 
 /**

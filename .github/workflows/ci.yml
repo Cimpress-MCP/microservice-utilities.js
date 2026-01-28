@@ -46,9 +46,13 @@ jobs:
 
       - name: Build package
         run: node make.js build
+        env:
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
 
       - name: Verify package contents
         run: npm pack --dry-run
+        env:
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
 
   # Optional: Publish to npm (only runs if NPM_TOKEN secret is configured)
   # If you prefer manual publishing, you can remove this entire job
@@ -89,13 +93,17 @@ jobs:
 
       - name: Build package
         run: node make.js build
+        env:
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
 
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
 
       - name: After build tasks
         run: node make.js after_build
         env:
           GIT_TAG_PUSHER: ${{ secrets.GIT_TAG_PUSHER }}
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
