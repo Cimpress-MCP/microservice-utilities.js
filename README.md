@@ -127,7 +127,7 @@ new PlatformClient(msg => requestLogger.log(msg), tokenResolver, { client: axios
 
 # Changelog
 
-## [Unreleased] - Major Upgrade: Node 20+ Support & AWS SDK v3 Migration
+## Major Upgrade: Node 20+ Support & AWS SDK v3 Migration
 
 ### Breaking Changes
 - **Node.js Requirement**: Updated minimum Node.js version from `>=10.0.0` to `>=20.0.0`
